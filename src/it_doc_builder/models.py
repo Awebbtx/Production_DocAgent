@@ -237,12 +237,14 @@ class ResetOwnMfaRequest(BaseModel):
 
 
 class DeepSeekSettingsResponse(BaseModel):
+    provider: str = "deepseek"
     deepseek_model: str
     deepseek_base_url: str
     api_key_configured: bool
 
 
 class UpdateDeepSeekSettingsRequest(BaseModel):
+    provider: str = "deepseek"
     deepseek_model: str
     deepseek_base_url: str
     deepseek_api_key: str = ""

@@ -38,10 +38,15 @@ def _write_env_pairs(path: Path, pairs: list[tuple[str, str]]) -> None:
 
 def get_deepseek_settings() -> DeepSeekSettingsResponse:
     settings = get_settings()
+    provider = (settings.llm_provider or "deepseek").strip().lower() or "deepseek"
+    base_url = (settings.llm_base_url or settings.deepseek_base_url or "").strip()
+    model = (settings.llm_model or settings.deepseek_model or "").strip()
+    api_key = (settings.llm_api_key or settings.deepseek_api_key or "").strip()
     return DeepSeekSettingsResponse(
-        deepseek_model=settings.deepseek_model,
-        deepseek_base_url=settings.deepseek_base_url,
-        api_key_configured=bool(settings.deepseek_api_key),
+        provider=provider,
+        deepseek_model=model,
+        deepseek_base_url=base_url,
+        api_key_configured=bool(api_key),
     )
 
 
@@ -50,12 +55,24 @@ def update_deepseek_settings(request: UpdateDeepSeekSettingsRequest) -> DeepSeek
     pairs = _read_env_pairs(path)
     env_map = {key: value for key, value in pairs}
 
-    env_map["DEEPSEEK_MODEL"] = request.deepseek_model.strip() or "deepseek-chat"
-    env_map["DEEPSEEK_BASE_URL"] = request.deepseek_base_url.strip() or "https://api.deepseek.com"
+    provider = (request.provider or "deepseek").strip().lower() or "deepseek"
+    model = request.deepseek_model.strip() or "deepseek-chat"
+    base_url = request.deepseek_base_url.strip() or "https://api.deepseek.com"
+    env_map["LLM_PROVIDER"] = provider
+    env_map["LLM_MODEL"] = model
+    env_map["LLM_BASE_URL"] = base_url
+    # Keep legacy DeepSeek keys in sync for backward compatibility.
+    env_map["DEEPSEEK_MODEL"] = model
+    env_map["DEEPSEEK_BASE_URL"] = base_url
     if request.deepseek_api_key.strip():
+        env_map["LLM_API_KEY"] = request.deepseek_api_key.strip()
         env_map["DEEPSEEK_API_KEY"] = request.deepseek_api_key.strip()
 
     ordered_keys = [
+        "LLM_PROVIDER",
+        "LLM_API_KEY",
+        "LLM_MODEL",
+        "LLM_BASE_URL",
         "DEEPSEEK_API_KEY",
         "DEEPSEEK_MODEL",
         "DEEPSEEK_BASE_URL",
@@ -107,6 +124,10 @@ def update_document_defaults(request: UpdateDocumentDefaultsRequest) -> Document
     env_map["DEFAULT_COMPANY_LOGO_URL"] = request.company_logo_url.strip() if request.company_logo_url else ""
 
     ordered_keys = [
+        "LLM_PROVIDER",
+        "LLM_API_KEY",
+        "LLM_MODEL",
+        "LLM_BASE_URL",
         "DEEPSEEK_API_KEY",
         "DEEPSEEK_MODEL",
         "DEEPSEEK_BASE_URL",
@@ -166,6 +187,10 @@ def update_email_settings(request: UpdateEmailSettingsRequest) -> EmailSettingsR
     env_map["SMTP_FROM_EMAIL"] = request.smtp_from_email.strip()
 
     ordered_keys = [
+        "LLM_PROVIDER",
+        "LLM_API_KEY",
+        "LLM_MODEL",
+        "LLM_BASE_URL",
         "DEEPSEEK_API_KEY",
         "DEEPSEEK_MODEL",
         "DEEPSEEK_BASE_URL",

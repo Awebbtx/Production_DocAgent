@@ -12,8 +12,40 @@ class DeepSeekClient:
     def __init__(self, settings: Settings) -> None:
         self._settings = settings
 
+    def _resolved_provider(self) -> str:
+        return (self._settings.llm_provider or "deepseek").strip().lower()
+
+    def _resolved_api_key(self) -> str:
+        return (self._settings.llm_api_key or self._settings.deepseek_api_key or "").strip()
+
+    def _resolved_model(self) -> str:
+        provider = self._resolved_provider()
+        configured = (self._settings.llm_model or "").strip()
+        if configured:
+            return configured
+        if provider == "openai":
+            return "gpt-4o-mini"
+        if provider == "groq":
+            return "llama-3.3-70b-versatile"
+        if provider == "openrouter":
+            return "openai/gpt-4o-mini"
+        return self._settings.deepseek_model
+
+    def _resolved_base_url(self) -> str:
+        provider = self._resolved_provider()
+        configured = (self._settings.llm_base_url or "").strip()
+        if configured:
+            return configured
+        if provider == "openai":
+            return "https://api.openai.com/v1"
+        if provider == "groq":
+            return "https://api.groq.com/openai/v1"
+        if provider == "openrouter":
+            return "https://openrouter.ai/api/v1"
+        return self._settings.deepseek_base_url
+
     async def generate_html(self, prompt: str) -> str:
-        if not self._settings.deepseek_api_key:
+        if not self._resolved_api_key():
             return self._fallback_html(prompt)
 
         return await self.complete(
@@ -26,7 +58,7 @@ class DeepSeekClient:
         )
 
     async def recommend_templates(self, prompt: str) -> str:
-        if not self._settings.deepseek_api_key:
+        if not self._resolved_api_key():
             return json.dumps([])
 
         return await self.complete(
@@ -40,16 +72,19 @@ class DeepSeekClient:
         )
 
     async def complete(self, system_prompt: str, user_prompt: str, temperature: float = 0.2) -> str:
-        if not self._settings.deepseek_api_key:
+        if not self._resolved_api_key():
             return self._fallback_html(user_prompt)
 
-        url = f"{self._settings.deepseek_base_url.rstrip('/')}/chat/completions"
+        url = f"{self._resolved_base_url().rstrip('/')}/chat/completions"
         headers = {
-            "Authorization": f"Bearer {self._settings.deepseek_api_key}",
+            "Authorization": f"Bearer {self._resolved_api_key()}",
             "Content-Type": "application/json",
         }
+        if self._resolved_provider() == "openrouter":
+            headers["HTTP-Referer"] = "https://docagent.local"
+            headers["X-Title"] = "DocAgent"
         payload: dict[str, Any] = {
-            "model": self._settings.deepseek_model,
+            "model": self._resolved_model(),
             "messages": [
                 {
                     "role": "system",

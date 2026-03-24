@@ -290,8 +290,18 @@
         </section>
 
         <section class="panel">
-            <h2>DeepSeek API Settings</h2>
+            <h2>LLM API Settings</h2>
             <div class="create-grid">
+                <div class="field">
+                    <label for="llm-provider">Provider</label>
+                    <select id="llm-provider">
+                        <option value="deepseek">DeepSeek</option>
+                        <option value="openai">OpenAI</option>
+                        <option value="groq">Groq (OpenAI-compatible)</option>
+                        <option value="openrouter">OpenRouter</option>
+                        <option value="custom">Custom OpenAI-compatible</option>
+                    </select>
+                </div>
                 <div class="field">
                     <label for="deepseek-model">Model</label>
                     <input id="deepseek-model" value="deepseek-chat">
@@ -435,6 +445,7 @@
             const retentionInput = document.getElementById("new-retention");
             const unlimitedStorageInput = document.getElementById("new-unlimited-storage");
         const deepseekModelInput = document.getElementById("deepseek-model");
+        const llmProviderInput = document.getElementById("llm-provider");
         const deepseekBaseUrlInput = document.getElementById("deepseek-base-url");
         const deepseekApiKeyInput = document.getElementById("deepseek-api-key");
         const saveDeepseekBtn = document.getElementById("save-deepseek");
@@ -656,6 +667,7 @@
                     throw new Error(err.detail || "Failed to load DeepSeek settings.");
                 }
                 const config = await response.json();
+                llmProviderInput.value = config.provider || "deepseek";
                 deepseekModelInput.value = config.deepseek_model || "deepseek-chat";
                 deepseekBaseUrlInput.value = config.deepseek_base_url || "https://api.deepseek.com";
                 deepseekStatus.textContent = config.api_key_configured
@@ -724,6 +736,7 @@
                     method: "POST",
                     headers: {"Content-Type": "application/json"},
                     body: JSON.stringify({
+                        provider: llmProviderInput.value,
                         deepseek_model: deepseekModelInput.value.trim(),
                         deepseek_base_url: deepseekBaseUrlInput.value.trim(),
                         deepseek_api_key: deepseekApiKeyInput.value,

@@ -179,7 +179,7 @@
 <div class="page-shell">
     <section class="hero">
         <div class="hero-nav">
-            <a href="/app">Builder</a>
+            <a href="/app">DocAgent</a>
             <a href="/history" aria-current="page">History</a>
             <a href="/account">My Account</a>
             <a href="/help/tracking-codes">Tracking Code Help</a>
@@ -189,12 +189,22 @@
             <button id="hero-logout" type="button">Logout</button>
         </div>
         <h1>Document History</h1>
-        <p>Your generated documents - available for 48 hours. Maximum 5 GB total storage per instance. Powered by IKAP Systems.</p>
+        <p>
+            Your generated documents - retained for {{ retention_days }} day{% if retention_days != 1 %}s{% endif %}.
+            {% if unlimited_storage %}
+            Storage policy: unlimited.
+            {% else %}
+            Storage policy: 5 GB cap.
+            {% endif %}
+            Powered by IKAP Systems.
+        </p>
     </section>
 
     <div class="panel">
         <h2>Recent documents</h2>
-        <p class="panel-sub">Signed in as <strong>{{ username }}</strong>. Documents are purged automatically after 48 hours.</p>
+        <p class="panel-sub">
+            Signed in as <strong>{{ username }}</strong>. Documents are purged automatically after {{ retention_days }} day{% if retention_days != 1 %}s{% endif %}.
+        </p>
 
         <div id="loading">Loading…</div>
         <div id="empty">No documents found yet. <a href="/app">Build your first document</a>.</div>

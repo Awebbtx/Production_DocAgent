@@ -170,10 +170,24 @@ async def history_page(request: Request) -> HTMLResponse:
     identity = _session_identity_or_none(request)
     if not identity or not identity.mfa_verified:
         return RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
+    retention_days = 2
+    unlimited_storage = False
+    try:
+        user = _auth_service().get_user(identity.username)
+        retention_days = int(user.retention_days or 2)
+        unlimited_storage = bool(user.unlimited_storage)
+    except AuthError:
+        pass
     return templates.TemplateResponse(
         request,
         "history.html.j2",
-        {"request": request, "username": identity.username, "is_admin": identity.is_admin},
+        {
+            "request": request,
+            "username": identity.username,
+            "is_admin": identity.is_admin,
+            "retention_days": retention_days,
+            "unlimited_storage": unlimited_storage,
+        },
     )
 
 

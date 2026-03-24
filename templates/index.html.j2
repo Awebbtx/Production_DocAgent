@@ -452,6 +452,45 @@
                             <label for="tracking_code">Document tracking code</label>
                             <input id="tracking_code" name="tracking_code" value="" readonly>
                         </div>
+                        <div class="field" id="field-sequence">
+                            <label for="tracking_sequence">Tracking sequence</label>
+                            <input id="tracking_sequence" name="tracking_sequence" type="number" min="1" value="1">
+                        </div>
+                        <div class="field" id="field-revision">
+                            <label for="revision">Revision</label>
+                            <input id="revision" name="revision" value="R01" placeholder="R01">
+                        </div>
+                        <div class="field" id="field-status">
+                            <label for="document_status">Document status</label>
+                            <select id="document_status" name="document_status">
+                                <option value="Draft" selected>Draft</option>
+                                <option value="Review">Review</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Obsolete">Obsolete</option>
+                            </select>
+                        </div>
+                        <div class="field" id="field-classification">
+                            <label for="classification">Classification</label>
+                            <select id="classification" name="classification">
+                                <option value="Internal" selected>Internal</option>
+                                <option value="Public">Public</option>
+                                <option value="Confidential">Confidential</option>
+                                <option value="Restricted">Restricted</option>
+                            </select>
+                        </div>
+                        <div class="field" id="field-owner">
+                            <label for="document_owner">Document owner</label>
+                            <input id="document_owner" name="document_owner" value="" placeholder="Owner or custodian">
+                        </div>
+                        <div class="field" id="field-approver">
+                            <label for="approver">Approver</label>
+                            <input id="approver" name="approver" value="" placeholder="Approver name or role">
+                        </div>
+                    </div>
+
+                    <div class="field-full" id="field-retention">
+                        <label for="retention_policy">Retention policy</label>
+                        <input id="retention_policy" name="retention_policy" value="" placeholder="e.g. 7 years after closure">
                     </div>
 
                     <div class="field-full" id="field-project">
@@ -521,6 +560,8 @@
         const analyzeButton = document.getElementById("analyze-button");
         const documentDateInput = document.getElementById("document_date");
         const trackingCodeInput = document.getElementById("tracking_code");
+        const trackingSequenceInput = document.getElementById("tracking_sequence");
+        const revisionInput = document.getElementById("revision");
         const logoSelect = document.getElementById("company_logo_url");
         const logoPreview = document.getElementById("company_logo_preview");
         const heroLogout = document.getElementById("hero-logout");
@@ -541,7 +582,13 @@
             const subtypeCode = selected?.dataset.subtypeCode || "000";
             const rawDate = documentDateInput.value || new Date().toISOString().slice(0, 10);
             const compactDate = rawDate.replace(/-/g, "").slice(2, 8);
-            trackingCodeInput.value = `${typeCode}-${subtypeCode}-${compactDate}`;
+            const seqValue = Math.max(1, Number.parseInt(trackingSequenceInput.value || "1", 10) || 1);
+            const revisionRaw = String(revisionInput.value || "R01").trim().toUpperCase();
+            const revDigits = (revisionRaw.startsWith("R") ? revisionRaw.slice(1) : revisionRaw).replace(/\D/g, "");
+            const rev = `R${(revDigits || "01").slice(0, 2).padStart(2, "0")}`;
+            trackingSequenceInput.value = String(seqValue);
+            revisionInput.value = rev;
+            trackingCodeInput.value = `${typeCode}-${subtypeCode}-${compactDate}-${String(seqValue).padStart(3, "0")}-${rev}`;
         }
 
         // Populate a text/date input and mark its wrapper as AI-suggested
@@ -635,12 +682,8 @@
                     document.getElementById("work_items").value = r.work_items.join("\n");
                     document.getElementById("field-workitems")?.classList.add("ai-suggested");
                 }
-                if (r.tracking_code) {
-                    trackingCodeInput.value = r.tracking_code;
-                    document.getElementById("field-tracking")?.classList.add("ai-suggested");
-                } else {
-                    updateTrackingCode();
-                }
+                updateTrackingCode();
+                document.getElementById("field-tracking")?.classList.add("ai-suggested");
 
                 statusText.textContent = "Form prefilled — review, adjust if needed, then build the document.";
             } catch (error) {
@@ -672,6 +715,13 @@
                 company_logo_url: formData.get("company_logo_url") || "",
                 department:     formData.get("department") || "IT Department",
                 document_date:  formData.get("document_date"),
+                tracking_sequence: Number.parseInt(String(formData.get("tracking_sequence") || "1"), 10) || 1,
+                revision: String(formData.get("revision") || "R01"),
+                document_status: String(formData.get("document_status") || "Draft"),
+                classification: String(formData.get("classification") || "Internal"),
+                retention_policy: String(formData.get("retention_policy") || ""),
+                document_owner: String(formData.get("document_owner") || ""),
+                approver: String(formData.get("approver") || ""),
                 theme:          formData.get("theme") || "smtp",
                 document_type:  formData.get("document_type"),
                 project_details:formData.get("project_details") || "",
@@ -728,6 +778,12 @@
                         title: currentTitle || String(document.getElementById("title").value || "Document"),
                         document_type: currentDocumentType || String(document.getElementById("document_type").value || "general-work-report"),
                         tracking_code: currentTrackingCode || trackingCodeInput.value,
+                        revision: String(document.getElementById("revision").value || "R01"),
+                        document_status: String(document.getElementById("document_status").value || "Draft"),
+                        classification: String(document.getElementById("classification").value || "Internal"),
+                        retention_policy: String(document.getElementById("retention_policy").value || ""),
+                        document_owner: String(document.getElementById("document_owner").value || ""),
+                        approver: String(document.getElementById("approver").value || ""),
                         html: generatedHtml,
                     }),
                 });
@@ -852,6 +908,8 @@
 
         select.addEventListener("change", updateTrackingCode);
         documentDateInput.addEventListener("change", updateTrackingCode);
+        trackingSequenceInput.addEventListener("change", updateTrackingCode);
+        revisionInput.addEventListener("change", updateTrackingCode);
         logoSelect.addEventListener("change", refreshLogoPreview);
         updateTrackingCode();
         refreshLogoPreview();

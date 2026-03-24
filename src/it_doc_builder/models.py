@@ -68,6 +68,13 @@ class DocumentBuildRequest(BaseModel):
     raw_notes: str
     work_items: list[str] = Field(default_factory=list)
     template_name: str = "default"
+    tracking_sequence: int = 1
+    revision: str = "R01"
+    document_status: str = "Draft"
+    classification: str = "Internal"
+    retention_policy: str = ""
+    document_owner: str = ""
+    approver: str = ""
     generate_docx: bool = True
 
 
@@ -76,6 +83,12 @@ class GeneratedDocument(BaseModel):
     prompt: str
     document_type: str
     tracking_code: str
+    revision: str = "R01"
+    document_status: str = "Draft"
+    classification: str = "Internal"
+    retention_policy: str = ""
+    document_owner: str = ""
+    approver: str = ""
     docx_path: Path | None = None
     doc_id: str = ""
     html_path: Path | None = None
@@ -87,6 +100,12 @@ class DocumentBuildResponse(BaseModel):
     prompt: str
     document_type: str
     tracking_code: str
+    revision: str = "R01"
+    document_status: str = "Draft"
+    classification: str = "Internal"
+    retention_policy: str = ""
+    document_owner: str = ""
+    approver: str = ""
     docx_path: str | None = None
 
 
@@ -94,6 +113,12 @@ class SaveDocumentRequest(BaseModel):
     title: str
     document_type: str
     tracking_code: str
+    revision: str = "R01"
+    document_status: str = "Draft"
+    classification: str = "Internal"
+    retention_policy: str = ""
+    document_owner: str = ""
+    approver: str = ""
     html: str
 
 
@@ -108,6 +133,11 @@ class DocumentHistoryItem(BaseModel):
     title: str
     document_type: str
     tracking_code: str
+    revision: str = "R01"
+    document_status: str = "Draft"
+    classification: str = "Internal"
+    document_owner: str = ""
+    approver: str = ""
     created_at: str
     has_html: bool
     has_docx: bool

@@ -265,6 +265,9 @@
                     <td data-label="Type">
                         <div style="font-weight:600">${escHtml(item.document_type)}</div>
                         <div class="code-cell">${escHtml(item.tracking_code)}</div>
+                        <div class="muted" style="margin-top:4px; font-size:0.82rem;">
+                            ${escHtml(item.document_status || "Draft")} • ${escHtml(item.classification || "Internal")} • ${escHtml(item.revision || "R01")}
+                        </div>
                     </td>
                     <td data-label="Formats">${badges || '<span class="muted">—</span>'}</td>
                     <td class="date-cell" data-label="Created">${fmtDate(item.created_at)}</td>

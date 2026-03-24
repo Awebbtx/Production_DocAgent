@@ -169,11 +169,11 @@
                 <button id="hero-logout" type="button">Logout</button>
             </div>
             <h1>Tracking Code Logic</h1>
-            <p>Each tracking code is built as 3 + 3 + 6 characters. This page explains what each block means and maps all current type/subtype combinations.</p>
+            <p>Tracking now supports the enhanced compliance format. This page explains legacy and enhanced structures and maps all current type/subtype combinations.</p>
         </section>
 
         <section class="panel">
-            <h2>Code Breakdown</h2>
+            <h2>Code Breakdown (Enhanced)</h2>
             <div class="breakdown-grid">
                 <article class="code-box">
                     <div class="code">First 3</div>
@@ -191,7 +191,28 @@
                     <div>Example: <span class="mono">260324</span> = 2026-03-24.</div>
                 </article>
             </div>
-            <div class="example">Example full code: <span class="mono">NET-003-260324</span></div>
+            <div class="example">Enhanced code: <span class="mono">NET-003-260324-001-R01</span> (adds sequence and revision)</div>
+            <div class="example">Legacy code (still valid): <span class="mono">NET-003-260324</span></div>
+        </section>
+
+        <section class="panel">
+            <h2>Added Compliance Fields</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Purpose</th>
+                        <th>Example</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td class="mono">document_status</td><td>Lifecycle state for governance workflows.</td><td>Draft, Review, Approved, Obsolete</td></tr>
+                    <tr><td class="mono">classification</td><td>Information handling level for access control and sharing.</td><td>Internal, Confidential, Restricted</td></tr>
+                    <tr><td class="mono">retention_policy</td><td>Retention/disposal guidance for records management.</td><td>7 years after closure</td></tr>
+                    <tr><td class="mono">document_owner</td><td>Custodian accountable for ongoing accuracy and maintenance.</td><td>IT Operations Manager</td></tr>
+                    <tr><td class="mono">approver</td><td>Approving authority for formal release or compliance sign-off.</td><td>Director of IT</td></tr>
+                </tbody>
+            </table>
         </section>
 
         <section class="panel">
@@ -215,7 +236,7 @@
                         <td>{{ item.category }}</td>
                         <td class="mono">{{ item.type_code }}</td>
                         <td class="mono">{{ item.subtype_code }}</td>
-                        <td class="mono">{{ item.type_code }}-{{ item.subtype_code }}-YYMMDD</td>
+                        <td class="mono">{{ item.type_code }}-{{ item.subtype_code }}-YYMMDD[-SEQ-Rxx]</td>
                     </tr>
                     {% endfor %}
                 </tbody>

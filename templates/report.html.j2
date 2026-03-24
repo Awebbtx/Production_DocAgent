@@ -20,11 +20,31 @@
                         <span class="meta-separator">|</span>
                         <span>{{ tracking_code }}</span>
                         <span class="meta-separator">|</span>
+                        <span>{{ revision }}</span>
+                        <span class="meta-separator">|</span>
+                        <span>{{ document_status }}</span>
+                        <span class="meta-separator">|</span>
                         <span>Prepared by {{ author }}</span>
                         <span class="meta-separator">|</span>
                         <span>{{ department }}</span>
                         <span class="meta-separator">|</span>
                         <span>{{ document_date }}</span>
+                        {% if classification %}
+                        <span class="meta-separator">|</span>
+                        <span>{{ classification }}</span>
+                        {% endif %}
+                        {% if document_owner %}
+                        <span class="meta-separator">|</span>
+                        <span>Owner: {{ document_owner }}</span>
+                        {% endif %}
+                        {% if approver %}
+                        <span class="meta-separator">|</span>
+                        <span>Approver: {{ approver }}</span>
+                        {% endif %}
+                        {% if retention_policy %}
+                        <span class="meta-separator">|</span>
+                        <span>Retention: {{ retention_policy }}</span>
+                        {% endif %}
                     </div>
                 </div>
                 {% if company_logo_url %}

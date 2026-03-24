@@ -549,7 +549,21 @@ def build_document_type_catalog() -> str:
     return "\n\n".join(blocks)
 
 
-def build_tracking_code(document_type_key: str, document_date: date) -> str:
+def build_tracking_code(
+    document_type_key: str,
+    document_date: date,
+    sequence: int | None = None,
+    revision: str | None = None,
+) -> str:
     definition = get_document_type(document_type_key)
     date_code = document_date.strftime("%y%m%d")
-    return f"{definition.type_code}-{definition.subtype_code}-{date_code}"
+    base = f"{definition.type_code}-{definition.subtype_code}-{date_code}"
+    if sequence is None and not revision:
+        return base
+    seq = max(1, int(sequence or 1))
+    rev = str(revision or "R01").strip().upper()
+    if not rev.startswith("R"):
+        rev = f"R{rev}"
+    digits = "".join(ch for ch in rev[1:] if ch.isdigit())
+    rev = f"R{(digits or '01')[:2].zfill(2)}"
+    return f"{base}-{str(seq).zfill(3)}-{rev}"

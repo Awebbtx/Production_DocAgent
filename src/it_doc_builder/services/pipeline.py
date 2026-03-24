@@ -57,7 +57,12 @@ class DocumentPipeline:
 
     async def build_document(self, request: DocumentBuildRequest, username: str = "anonymous") -> GeneratedDocument:
         document_type = get_document_type(request.document_type)
-        tracking_code = build_tracking_code(document_type.key, request.document_date)
+        tracking_code = build_tracking_code(
+            document_type.key,
+            request.document_date,
+            sequence=request.tracking_sequence,
+            revision=request.revision,
+        )
         stylesheet_path = self._resolve_stylesheet_path(request.theme)
         stylesheet = self._read_stylesheet(stylesheet_path)
         prompt = self._build_prompt(request, stylesheet, tracking_code)
@@ -91,6 +96,12 @@ class DocumentPipeline:
             prompt=prompt,
             document_type=document_type.key,
             tracking_code=tracking_code,
+            revision=request.revision,
+            document_status=request.document_status,
+            classification=request.classification,
+            retention_policy=request.retention_policy,
+            document_owner=request.document_owner,
+            approver=request.approver,
             docx_path=docx_path,
             doc_id=doc_id,
             html_path=html_path,
@@ -112,6 +123,12 @@ class DocumentPipeline:
             department=request.department,
             document_date=request.document_date.isoformat(),
             tracking_code=tracking_code,
+            revision=request.revision,
+            document_status=request.document_status,
+            classification=request.classification,
+            retention_policy=request.retention_policy,
+            document_owner=request.document_owner,
+            approver=request.approver,
             document_type_name=document_type.name,
             work_items=request.work_items,
             generated_body=generated_body,
@@ -140,6 +157,12 @@ class DocumentPipeline:
             f"Company: {request.company_name or 'Not provided'}\n"
             f"Document date: {request.document_date.isoformat()}\n"
             f"Tracking code: {tracking_code}\n"
+            f"Revision: {request.revision}\n"
+            f"Document status: {request.document_status}\n"
+            f"Classification: {request.classification}\n"
+            f"Retention policy: {request.retention_policy or 'Not provided'}\n"
+            f"Document owner: {request.document_owner or request.author or 'Not provided'}\n"
+            f"Approver: {request.approver or 'Not provided'}\n"
             f"Theme: {request.theme}\n"
             f"Branding guidance: {logo_guidance}\n"
             f"Required sections: {sections}.\n"

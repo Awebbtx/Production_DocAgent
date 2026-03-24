@@ -30,6 +30,12 @@ class DocumentStore:
                     title           TEXT NOT NULL,
                     document_type   TEXT NOT NULL,
                     tracking_code   TEXT NOT NULL,
+                    revision        TEXT NOT NULL DEFAULT 'R01',
+                    document_status TEXT NOT NULL DEFAULT 'Draft',
+                    classification  TEXT NOT NULL DEFAULT 'Internal',
+                    retention_policy TEXT NOT NULL DEFAULT '',
+                    document_owner  TEXT NOT NULL DEFAULT '',
+                    approver        TEXT NOT NULL DEFAULT '',
                     html_path       TEXT,
                     docx_path       TEXT,
                     file_size_bytes INTEGER NOT NULL DEFAULT 0,
@@ -37,6 +43,22 @@ class DocumentStore:
                 )
                 """
             )
+            cols = {
+                row[1]
+                for row in conn.execute("PRAGMA table_info(documents)").fetchall()
+            }
+            if "revision" not in cols:
+                conn.execute("ALTER TABLE documents ADD COLUMN revision TEXT NOT NULL DEFAULT 'R01'")
+            if "document_status" not in cols:
+                conn.execute("ALTER TABLE documents ADD COLUMN document_status TEXT NOT NULL DEFAULT 'Draft'")
+            if "classification" not in cols:
+                conn.execute("ALTER TABLE documents ADD COLUMN classification TEXT NOT NULL DEFAULT 'Internal'")
+            if "retention_policy" not in cols:
+                conn.execute("ALTER TABLE documents ADD COLUMN retention_policy TEXT NOT NULL DEFAULT ''")
+            if "document_owner" not in cols:
+                conn.execute("ALTER TABLE documents ADD COLUMN document_owner TEXT NOT NULL DEFAULT ''")
+            if "approver" not in cols:
+                conn.execute("ALTER TABLE documents ADD COLUMN approver TEXT NOT NULL DEFAULT ''")
             conn.commit()
 
     def save_document(
@@ -47,6 +69,12 @@ class DocumentStore:
         title: str,
         document_type: str,
         tracking_code: str,
+        revision: str,
+        document_status: str,
+        classification: str,
+        retention_policy: str,
+        document_owner: str,
+        approver: str,
         html_path: Path | None,
         docx_path: Path | None,
     ) -> None:
@@ -60,8 +88,9 @@ class DocumentStore:
                 """
                 INSERT INTO documents
                     (doc_id, username, title, document_type, tracking_code,
+                     revision, document_status, classification, retention_policy, document_owner, approver,
                      html_path, docx_path, file_size_bytes, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     doc_id,
@@ -69,6 +98,12 @@ class DocumentStore:
                     title,
                     document_type,
                     tracking_code,
+                    revision,
+                    document_status,
+                    classification,
+                    retention_policy,
+                    document_owner,
+                    approver,
                     str(html_path) if html_path else None,
                     str(docx_path) if docx_path else None,
                     size,

@@ -338,23 +338,41 @@
 
         .btn-export:disabled { opacity: 0.55; cursor: not-allowed; }
 
+        .logo-picker-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .logo-picker-row select {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
         .logo-preview-wrap {
-            margin-top: 8px;
-            min-height: 52px;
+            min-height: 44px;
+            min-width: 86px;
+            justify-content: center;
             display: flex;
             align-items: center;
         }
 
         .logo-preview {
             display: none;
-            max-height: 48px;
-            max-width: 180px;
+            max-height: 40px;
+            max-width: 78px;
             width: auto;
             object-fit: contain;
             border: 1px solid #d7c7b2;
             border-radius: 8px;
             background: #fff;
             padding: 4px;
+        }
+
+        @media (max-width: 980px) {
+            .logo-picker-row {
+                align-items: flex-start;
+            }
         }
     </style>
 </head>
@@ -396,11 +414,13 @@
                         </div>
                         <div class="field" id="field-logo">
                             <label for="company_logo_url">Company logo</label>
-                            <select id="company_logo_url" name="company_logo_url">
-                                <option value="">No logo</option>
-                            </select>
-                            <div class="logo-preview-wrap">
-                                <img id="company_logo_preview" class="logo-preview" alt="Selected company logo preview">
+                            <div class="logo-picker-row">
+                                <select id="company_logo_url" name="company_logo_url">
+                                    <option value="">No logo</option>
+                                </select>
+                                <div class="logo-preview-wrap">
+                                    <img id="company_logo_preview" class="logo-preview" alt="Selected company logo preview">
+                                </div>
                             </div>
                         </div>
                         <div class="field" id="field-title">

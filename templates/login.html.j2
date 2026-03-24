@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>DocAgent Login</title>
+    <style>
+        :root {
+            --night: #0f1b2d;
+            --steel: #24415d;
+            --ember: #c85c2b;
+            --sand: #f4efe7;
+            --paper: #fcfaf5;
+            --line: #d6c8b7;
+            --text: #1a2430;
+            --muted: #5d6d79;
+            --warn: #af3f2b;
+            --accent: #2f6f4f;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top right, rgba(200, 92, 43, 0.15), transparent 28%),
+                linear-gradient(180deg, #e6ebef 0%, var(--sand) 100%);
+            display: grid;
+            place-items: center;
+            padding: 24px;
+        }
+
+        .shell {
+            width: min(980px, 100%);
+            background: var(--paper);
+            border: 1px solid var(--line);
+            border-radius: 24px;
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(15, 27, 45, 0.2);
+        }
+
+        .intro {
+            padding: 34px;
+            background: linear-gradient(135deg, rgba(15, 27, 45, 0.98), rgba(36, 65, 93, 0.92));
+            color: #fff;
+        }
+
+        .intro h1 {
+            margin: 0 0 10px;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: clamp(1.8rem, 3vw, 2.6rem);
+            line-height: 1.1;
+        }
+
+        .intro p {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.85);
+            line-height: 1.6;
+        }
+
+        .intro .hint {
+            margin-top: 18px;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.75);
+        }
+
+        .panel {
+            padding: 28px;
+            display: grid;
+            gap: 12px;
+            align-content: center;
+        }
+
+        label {
+            font-weight: 700;
+            color: var(--steel);
+            font-size: 0.92rem;
+        }
+
+        input {
+            width: 100%;
+            border: 1px solid #cbbba7;
+            border-radius: 12px;
+            padding: 11px 12px;
+            font: inherit;
+            background: #fff;
+        }
+
+        .row { display: grid; gap: 7px; }
+
+        button {
+            border: 0;
+            border-radius: 999px;
+            padding: 11px 14px;
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            color: #fff;
+            background: linear-gradient(135deg, var(--accent), #1f5f5b);
+        }
+
+        .secondary {
+            background: linear-gradient(135deg, #d8c9b6, #c9b69e);
+            color: #2b2b2b;
+        }
+
+        .mfa {
+            margin-top: 6px;
+            border-top: 1px dashed #d6c5b0;
+            padding-top: 12px;
+            display: grid;
+            gap: 10px;
+        }
+
+        [hidden] { display: none !important; }
+
+        .status {
+            min-height: 24px;
+            color: var(--muted);
+            font-size: 0.92rem;
+        }
+
+        .error { color: var(--warn); }
+
+        .qr {
+            width: 150px;
+            height: 150px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: #fff;
+        }
+
+        .secret {
+            font-size: 0.82rem;
+            color: var(--muted);
+            word-break: break-word;
+        }
+
+        .reset-box {
+            margin-top: 6px;
+            border-top: 1px dashed #d6c5b0;
+            padding-top: 12px;
+            display: grid;
+            gap: 8px;
+        }
+
+        @media (max-width: 880px) {
+            .shell { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <main class="shell">
+        <section class="intro">
+            <h1>DocAgent Secure Login</h1>
+            <p>Sign in with your account, then complete MFA to access the document builder and administrative settings.</p>
+            <p class="hint">First login for a new account prompts MFA enrollment with a QR code. Powered by IKAP Systems.</p>
+        </section>
+
+        <section class="panel">
+            <div class="row">
+                <label for="username">Username</label>
+                <input id="username" autocomplete="username">
+            </div>
+            <div class="row">
+                <label for="password">Password</label>
+                <input id="password" type="password" autocomplete="current-password">
+            </div>
+            <button id="login-btn" type="button">Continue</button>
+
+            <section class="mfa" id="mfa-panel" hidden>
+                <div class="row">
+                    <label for="code">MFA Code</label>
+                    <input id="code" inputmode="numeric" autocomplete="one-time-code" placeholder="6-digit code">
+                </div>
+                <button id="verify-btn" type="button">Verify MFA</button>
+                <img id="qr" class="qr" alt="MFA enrollment QR" hidden>
+                <div id="secret" class="secret"></div>
+            </section>
+
+            <div id="status" class="status">Use your DocAgent credentials to begin.</div>
+
+            <section class="reset-box">
+                <label for="reset-email">Forgot password? Send reset link</label>
+                <input id="reset-email" type="email" autocomplete="email" placeholder="you@example.com">
+                <button id="reset-link-btn" type="button" class="secondary">Email Reset Link</button>
+            </section>
+        </section>
+    </main>
+
+    <script>
+        const usernameInput = document.getElementById("username");
+        const passwordInput = document.getElementById("password");
+        const codeInput = document.getElementById("code");
+        const loginBtn = document.getElementById("login-btn");
+        const verifyBtn = document.getElementById("verify-btn");
+        const resetEmailInput = document.getElementById("reset-email");
+        const resetLinkBtn = document.getElementById("reset-link-btn");
+        const statusBox = document.getElementById("status");
+        const mfaPanel = document.getElementById("mfa-panel");
+        const qr = document.getElementById("qr");
+        const secret = document.getElementById("secret");
+
+        let challengeToken = "";
+
+        function status(message, isError = false) {
+            statusBox.textContent = message;
+            statusBox.classList.toggle("error", isError);
+        }
+
+        function resetMfaPanel() {
+            mfaPanel.hidden = true;
+            verifyBtn.disabled = true;
+            codeInput.value = "";
+            qr.hidden = true;
+            qr.removeAttribute("src");
+            secret.textContent = "";
+            challengeToken = "";
+        }
+
+        async function checkSession() {
+            try {
+                const response = await fetch("/auth/me");
+                const me = await response.json();
+                if (me.authenticated && me.mfa_verified) {
+                    window.location.href = "/app";
+                }
+            } catch (error) {
+                // stay on login page
+            }
+        }
+
+        loginBtn.addEventListener("click", async () => {
+            resetMfaPanel();
+            status("Signing in...");
+            try {
+                const response = await fetch("/auth/login", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({
+                        username: usernameInput.value.trim(),
+                        password: passwordInput.value,
+                    }),
+                });
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail || "Login failed.");
+                }
+                const result = await response.json();
+                challengeToken = result.challenge_token || "";
+                if (!challengeToken) {
+                    throw new Error("MFA challenge was not issued.");
+                }
+                mfaPanel.hidden = false;
+                verifyBtn.disabled = false;
+                if (result.mfa_enrollment_required) {
+                    if (result.mfa_qr_svg_data_uri) {
+                        qr.src = result.mfa_qr_svg_data_uri;
+                        qr.hidden = false;
+                    }
+                    secret.textContent = `Enrollment secret: ${result.mfa_secret || "unavailable"}`;
+                    status("Scan QR, then enter your MFA code.");
+                } else {
+                    status("Enter your MFA code to finish sign-in.");
+                }
+            } catch (error) {
+                resetMfaPanel();
+                status(error.message || "Login failed.", true);
+            }
+        });
+
+        verifyBtn.addEventListener("click", async () => {
+            if (!challengeToken) {
+                status("Start login first.", true);
+                return;
+            }
+            status("Verifying MFA...");
+            try {
+                const response = await fetch("/auth/verify-mfa", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({
+                        challenge_token: challengeToken,
+                        code: codeInput.value.trim(),
+                    }),
+                });
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail || "MFA verification failed.");
+                }
+                window.location.href = "/app";
+            } catch (error) {
+                status(error.message || "MFA verification failed.", true);
+            }
+        });
+
+        resetLinkBtn.addEventListener("click", async () => {
+            const email = resetEmailInput.value.trim();
+            if (!email) {
+                status("Enter your account email first.", true);
+                return;
+            }
+            status("Sending reset link...");
+            try {
+                const response = await fetch("/auth/password-reset/request", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({ email }),
+                });
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail || "Could not send reset link.");
+                }
+                status("If that email exists, a reset link has been sent.");
+            } catch (error) {
+                status(error.message || "Could not send reset link.", true);
+            }
+        });
+
+        resetMfaPanel();
+        checkSession();
+    </script>
+</body>
+</html>

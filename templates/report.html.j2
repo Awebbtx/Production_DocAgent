@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }}</title>
+    <style>
+{{ stylesheet }}
+    </style>
+</head>
+<body>
+    <main class="report-shell">
+        <header class="report-header">
+            <div class="report-header-top">
+                <div class="report-header-main">
+                    <p class="eyebrow">{{ company_name or department }}</p>
+                    <h1>{{ title }}</h1>
+                    <div class="report-meta">
+                        <span>{{ document_type_name }}</span>
+                        <span class="meta-separator">|</span>
+                        <span>{{ tracking_code }}</span>
+                        <span class="meta-separator">|</span>
+                        <span>Prepared by {{ author }}</span>
+                        <span class="meta-separator">|</span>
+                        <span>{{ department }}</span>
+                        <span class="meta-separator">|</span>
+                        <span>{{ document_date }}</span>
+                    </div>
+                </div>
+                {% if company_logo_url %}
+                <div class="company-logo-frame">
+                    <img src="{{ company_logo_url }}" alt="Company logo" class="company-logo-image">
+                </div>
+                {% endif %}
+            </div>
+        </header>
+
+        {% if work_items %}
+        <section>
+            <h2>Recorded Work Items</h2>
+            <ul>
+                {% for item in work_items %}
+                <li>{{ item }}</li>
+                {% endfor %}
+            </ul>
+        </section>
+        {% endif %}
+
+        <section class="generated-content">
+            {{ generated_body | safe }}
+        </section>
+    </main>
+</body>
+</html>

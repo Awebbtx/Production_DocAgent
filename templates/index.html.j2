@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>DocAgent</title>
+    <style>
+        :root {
+            --night: #0f1b2d;
+            --steel: #24415d;
+            --ember: #c85c2b;
+            --sand: #f4efe7;
+            --paper: #fcfaf5;
+            --line: #d6c8b7;
+            --text: #1a2430;
+            --muted: #5c6a78;
+            --success: #2f6f4f;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top right, rgba(200, 92, 43, 0.15), transparent 28%),
+                linear-gradient(180deg, #e6ebef 0%, var(--sand) 100%);
+        }
+
+        .page-shell {
+            width: min(1240px, calc(100vw - 32px));
+            margin: 24px auto 40px;
+        }
+
+        .hero {
+            display: block;
+            padding: 28px;
+            background: linear-gradient(135deg, rgba(15, 27, 45, 0.98), rgba(36, 65, 93, 0.92));
+            color: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(15, 27, 45, 0.2);
+        }
+
+        .hero h1 {
+            margin: 0 0 12px;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: clamp(2rem, 4vw, 3.4rem);
+            line-height: 1.05;
+        }
+
+        .hero p {
+            margin: 0;
+            line-height: 1.65;
+            color: rgba(255, 255, 255, 0.82);
+        }
+
+
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+            margin-top: 24px;
+            align-items: start;
+        }
+
+        .panel {
+            background: var(--paper);
+            border: 1px solid var(--line);
+            border-radius: 24px;
+            box-shadow: 0 18px 44px rgba(36, 65, 93, 0.08);
+        }
+
+        .panel-header {
+            padding: 24px 24px 0;
+        }
+
+        .panel-header h2 {
+            margin: 0;
+            font-family: Georgia, "Times New Roman", serif;
+            color: var(--night);
+        }
+
+        .panel-header p {
+            margin: 8px 0 0;
+            color: var(--muted);
+        }
+
+        form {
+            padding: 24px;
+        }
+
+        .field-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .field,
+        .field-full {
+            display: grid;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .field-full {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: var(--steel);
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            border: 1px solid #c9baa7;
+            border-radius: 14px;
+            padding: 12px 14px;
+            font: inherit;
+            color: var(--text);
+            background: white;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+
+
+        .actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .theme-inline {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .theme-inline label {
+            margin: 0;
+            white-space: nowrap;
+        }
+
+        .theme-inline select {
+            width: auto;
+            min-width: 270px;
+            margin: 0;
+        }
+
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--muted);
+        }
+
+        .checkbox-row input {
+            width: auto;
+        }
+
+        button {
+            border: 0;
+            border-radius: 999px;
+            padding: 13px 20px;
+            font: inherit;
+            font-weight: 700;
+            color: white;
+            background: linear-gradient(135deg, var(--ember), #a74419);
+            cursor: pointer;
+        }
+
+        button:disabled {
+            opacity: 0.65;
+            cursor: wait;
+        }
+
+        .button-secondary {
+            color: var(--steel);
+            background: linear-gradient(135deg, #e9dfd2, #d7c7b2);
+        }
+
+
+
+        .result-panel {
+            margin-top: 24px;
+            padding: 24px;
+        }
+
+        .result-meta {
+            display: grid;
+            gap: 8px;
+            margin-bottom: 18px;
+            color: var(--muted);
+        }
+
+        .result-frame {
+            min-height: 220px;
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            padding: 18px;
+            background: white;
+            overflow: auto;
+        }
+
+        .status {
+            color: var(--success);
+            font-weight: 700;
+        }
+
+        .muted {
+            color: var(--muted);
+        }
+
+        @media (max-width: 980px) {
+            .field-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .page-shell {
+                width: min(100vw - 20px, 1240px);
+            }
+        }
+
+        .analyze-bar {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 0 0 20px;
+        }
+
+        .analyze-hint {
+            font-size: 0.88rem;
+            color: var(--muted);
+        }
+
+        .field.ai-suggested label::after {
+            content: " \2726 AI";
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--ember);
+            letter-spacing: 0.06em;
+            margin-left: 4px;
+        }
+
+        .field.ai-suggested input,
+        .field.ai-suggested select,
+        .field.ai-suggested textarea {
+            border-color: rgba(200, 92, 43, 0.45);
+            background: #fff9f5;
+        }
+
+
+
+        .hero-nav {
+            margin-bottom: 10px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .hero-nav a,
+        .hero-nav button {
+            border: 0;
+            border-radius: 999px;
+            padding: 8px 12px;
+            text-decoration: none;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #12314b;
+            background: rgba(255, 255, 255, 0.88);
+            cursor: pointer;
+        }
+
+
+        /* ── Export panel ────────────────────────────────────────────── */
+        .export-panel {
+            display: none;
+            background: #edf4f0;
+            border: 1px solid #b8d4c4;
+            border-radius: 14px;
+            padding: 14px 18px;
+            margin-bottom: 18px;
+        }
+
+        .export-panel .tracking-info {
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin-bottom: 10px;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn-export {
+            display: inline-block;
+            border: 0;
+            border-radius: 999px;
+            padding: 9px 18px;
+            font: inherit;
+            font-size: 0.88rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            white-space: nowrap;
+            color: white;
+            background: linear-gradient(135deg, var(--ember), #a74419);
+        }
+
+        .btn-export-secondary {
+            color: var(--steel) !important;
+            background: linear-gradient(135deg, #e9dfd2, #d7c7b2);
+        }
+
+        .btn-export:disabled { opacity: 0.55; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+    <div class="page-shell">
+        <section class="hero">
+            <div class="hero-nav">
+                <a href="/history">History</a>
+                <a href="/account">My Account</a>
+                {% if is_admin %}
+                <a href="/settings">Settings</a>
+                {% endif %}
+                <button id="hero-logout" type="button">Logout</button>
+            </div>
+            <h1>DocAgent</h1>
+            <p>Paste your project details and notes, select the document type, and generate a professional document. Powered by IKAP Systems.</p>
+        </section>
+
+        <section class="layout">
+            <article class="panel">
+                <div class="panel-header">
+                    <h2>Document intake</h2>
+                </div>
+                <form id="builder-form">
+                    <div class="field-full">
+                        <label for="raw_notes">Raw notes</label>
+                        <textarea id="raw_notes" name="raw_notes" rows="11" placeholder="Paste technician notes, timeline, troubleshooting steps, findings, and validation details here — AI will extract structure from whatever you provide." required></textarea>
+                    </div>
+
+                    <div class="analyze-bar">
+                        <button id="analyze-button" type="button">Analyze &amp; prefill form</button>
+                        <span class="analyze-hint">DeepSeek reads your notes and fills in the fields below.</span>
+                    </div>
+
+                    <div class="field-grid">
+                        <div class="field" id="field-title">
+                            <label for="title">Document title</label>
+                            <input id="title" name="title" value="" placeholder="Will be populated from your notes" required>
+                        </div>
+                        <div class="field" id="field-author">
+                            <label for="author">Author</label>
+                            <input id="author" name="author" value="" placeholder="Technician or engineer name">
+                        </div>
+                        <div class="field" id="field-company">
+                            <label for="company_name">Company name</label>
+                            <input id="company_name" name="company_name" value="" placeholder="Example: Contoso Manufacturing">
+                        </div>
+                        <div class="field" id="field-logo">
+                            <label for="company_logo_url">Company logo</label>
+                            <select id="company_logo_url" name="company_logo_url">
+                                <option value="">No logo</option>
+                            </select>
+                        </div>
+                        <div class="field" id="field-date">
+                            <label for="document_date">Document date</label>
+                            <input id="document_date" name="document_date" type="date" required>
+                        </div>
+                        <div class="field" id="field-dept">
+                            <label for="department">Department</label>
+                            <input id="department" name="department" value="" placeholder="e.g. IT Operations">
+                        </div>
+                        <div class="field" id="field-doctype">
+                            <label for="document_type">Document type</label>
+                            <select id="document_type" name="document_type">
+                                {% for item in document_types %}
+                                <option value="{{ item.key }}" data-type-code="{{ item.type_code }}" data-subtype-code="{{ item.subtype_code }}">{{ item.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="field" id="field-tracking">
+                            <label for="tracking_code">Document tracking code</label>
+                            <input id="tracking_code" name="tracking_code" value="" readonly>
+                        </div>
+                    </div>
+
+                    <div class="field-full" id="field-project">
+                        <label for="project_details">Project details</label>
+                        <textarea id="project_details" name="project_details" rows="5" placeholder="Scope, affected systems, stakeholders, schedule, approvals, and business reason."></textarea>
+                    </div>
+
+                    <div class="field-full" id="field-workitems">
+                        <label for="work_items">Work items</label>
+                        <textarea id="work_items" name="work_items" rows="5" placeholder="One item per line. Example: Updated switch uplink on MDF-01"></textarea>
+                    </div>
+
+                    <div class="actions">
+                        <div class="action-buttons">
+                            <div class="theme-inline" id="field-theme">
+                                <label for="theme">Color palette theme</label>
+                                <select id="theme" name="theme">
+                                    <option value="smtp" selected>Blue</option>
+                                    <option value="azure">Navy</option>
+                                    <option value="security">Green</option>
+                                </select>
+                            </div>
+                            <button id="restyle-button" class="button-secondary" type="button">Apply selected theme</button>
+                            <button id="submit-button" type="submit">Build document</button>
+                            <button id="save-button" class="button-secondary" type="button" style="display:none;">Save</button>
+                        </div>
+                    </div>
+                </form>
+            </article>
+        </section>
+
+        <section class="panel result-panel">
+            <div class="panel-header">
+                <h2>Generated result</h2>
+                <p>Review below, then export or start a new document.</p>
+            </div>
+            <div class="result-meta">
+                <div class="status" id="status-text">Waiting for input.</div>
+            </div>
+
+            <div class="export-panel" id="export-panel">
+                <div class="tracking-info" id="tracking-info"></div>
+                <div class="export-buttons">
+                    <a id="dl-html" class="btn-export btn-export-secondary" href="#" download>&#8595; Download HTML</a>
+                    <button id="btn-preview" class="btn-export btn-export-secondary" type="button">&#128065; Open Preview</button>
+                    <button id="btn-print" class="btn-export btn-export-secondary" type="button">&#128438; Print / Save PDF</button>
+                    <button id="btn-clear" class="btn-export btn-export-secondary" type="button">&#10005; New Document</button>
+                </div>
+            </div>
+
+            <div id="result-frame" class="result-frame">
+                <p class="muted">Generated HTML will render here after submission.</p>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const form = document.getElementById("builder-form");
+        const select = document.getElementById("document_type");
+        const statusText = document.getElementById("status-text");
+        const resultFrame = document.getElementById("result-frame");
+        const exportPanel = document.getElementById("export-panel");
+        const dlHtml = document.getElementById("dl-html");
+        const submitButton = document.getElementById("submit-button");
+        const saveButton = document.getElementById("save-button");
+        const restyleButton = document.getElementById("restyle-button");
+        const analyzeButton = document.getElementById("analyze-button");
+        const documentDateInput = document.getElementById("document_date");
+        const trackingCodeInput = document.getElementById("tracking_code");
+        const logoSelect = document.getElementById("company_logo_url");
+        const heroLogout = document.getElementById("hero-logout");
+        let generatedHtml = "";
+        let currentDocId = "";
+        let currentTrackingCode = "";
+        let currentDocumentType = "";
+        let currentTitle = "";
+        let localDownloadUrl = "";
+
+        // Default date field to today so it's never blank
+        documentDateInput.value = new Date().toISOString().slice(0, 10);
+
+        // ── Helpers ─────────────────────────────────────────────────────────
+        function updateTrackingCode() {
+            const selected = select.options[select.selectedIndex];
+            const typeCode = selected?.dataset.typeCode || "GEN";
+            const subtypeCode = selected?.dataset.subtypeCode || "000";
+            const rawDate = documentDateInput.value || new Date().toISOString().slice(0, 10);
+            const compactDate = rawDate.replace(/-/g, "").slice(2, 8);
+            trackingCodeInput.value = `${typeCode}-${subtypeCode}-${compactDate}`;
+        }
+
+        // Populate a text/date input and mark its wrapper as AI-suggested
+        function ai(wrapperId, inputId, value) {
+            const input = document.getElementById(inputId);
+            if (input && value) {
+                input.value = value;
+                document.getElementById(wrapperId)?.classList.add("ai-suggested");
+            }
+        }
+
+        function slugifyFileName(value) {
+            const slug = String(value || "document")
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, "-")
+                .replace(/(^-|-$)/g, "")
+                .slice(0, 80);
+            return slug || "document";
+        }
+
+        function openHtmlPreview(autoprint = false) {
+            if (!generatedHtml) return;
+            if (currentDocId) {
+                const suffix = autoprint ? "?autoprint=1" : "";
+                window.open(`/documents/${currentDocId}/preview${suffix}`, "_blank");
+                return;
+            }
+            const popup = window.open("", "_blank");
+            if (!popup) return;
+            popup.document.open();
+            popup.document.write(generatedHtml);
+            if (autoprint) {
+                popup.document.write("<script>window.addEventListener('load',()=>window.print());<\/script>");
+            }
+            popup.document.close();
+        }
+
+        // ── Analyze & prefill ────────────────────────────────────────────────
+        analyzeButton.addEventListener("click", async () => {
+            const rawNotes = document.getElementById("raw_notes").value.trim();
+            if (!rawNotes) { 
+                statusText.textContent = "Paste some notes first."; 
+                return; 
+            }
+
+            statusText.textContent = "Analyzing notes with DeepSeek…";
+            analyzeButton.disabled = true;
+            document.querySelectorAll(".field.ai-suggested").forEach((f) => f.classList.remove("ai-suggested"));
+
+            try {
+                const response = await fetch("/documents/analyze-notes", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({raw_notes: rawNotes}),
+                });
+                if (!response.ok) throw new Error("Analysis request failed.");
+
+                const r = await response.json();
+
+                ai("field-title",   "title",         r.title);
+                ai("field-author",  "author",        r.author);
+                ai("field-company", "company_name",  r.company_name);
+                ai("field-date",    "document_date", r.document_date);
+                ai("field-dept",    "department",    r.department);
+
+                if (r.document_type) {
+                    select.value = r.document_type;
+                    document.getElementById("field-doctype")?.classList.add("ai-suggested");
+                }
+                if (r.suggested_theme) {
+                    const themeSelect = document.getElementById("theme");
+                    themeSelect.value = r.suggested_theme;
+                    document.getElementById("field-theme")?.classList.add("ai-suggested");
+                }
+                if (r.project_details) {
+                    document.getElementById("project_details").value = r.project_details;
+                    document.getElementById("field-project")?.classList.add("ai-suggested");
+                }
+                if (r.work_items && r.work_items.length) {
+                    document.getElementById("work_items").value = r.work_items.join("\n");
+                    document.getElementById("field-workitems")?.classList.add("ai-suggested");
+                }
+                if (r.tracking_code) {
+                    trackingCodeInput.value = r.tracking_code;
+                    document.getElementById("field-tracking")?.classList.add("ai-suggested");
+                } else {
+                    updateTrackingCode();
+                }
+
+                statusText.textContent = "Form prefilled — review, adjust if needed, then build the document.";
+            } catch (error) {
+                statusText.textContent = error.message;
+            } finally {
+                analyzeButton.disabled = false;
+            }
+        });
+
+        // ── Build document ───────────────────────────────────────────────────
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            submitButton.disabled = true;
+            statusText.textContent = "Generating document…";
+            exportPanel.style.display = "none";
+            saveButton.style.display = "none";
+            currentDocId = "";
+
+            if (localDownloadUrl) {
+                URL.revokeObjectURL(localDownloadUrl);
+                localDownloadUrl = "";
+            }
+
+            const formData = new FormData(form);
+            const payload = {
+                title:          formData.get("title"),
+                author:         formData.get("author") || "",
+                company_name:   formData.get("company_name") || "",
+                company_logo_url: formData.get("company_logo_url") || "",
+                department:     formData.get("department") || "IT Department",
+                document_date:  formData.get("document_date"),
+                theme:          formData.get("theme") || "smtp",
+                document_type:  formData.get("document_type"),
+                project_details:formData.get("project_details") || "",
+                raw_notes:      formData.get("raw_notes"),
+                work_items:     String(formData.get("work_items") || "").split("\n").map((i) => i.trim()).filter(Boolean),
+                generate_docx: false,
+            };
+
+            try {
+                const response = await fetch("/documents/build", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify(payload),
+                });
+                if (!response.ok) throw new Error("Document generation failed.");
+
+                const result = await response.json();
+                statusText.textContent = `Built (not saved) — ${result.document_type}`;
+                generatedHtml = result.html;
+                currentTrackingCode = result.tracking_code;
+                currentDocumentType = result.document_type;
+                currentTitle = String(payload.title || "Document");
+                resultFrame.innerHTML = result.html;
+                saveButton.style.display = "";
+
+                // Show export panel
+                document.getElementById("tracking-info").textContent =
+                    `Tracking code: ${result.tracking_code} • Unsaved draft`;
+                localDownloadUrl = URL.createObjectURL(new Blob([result.html], { type: "text/html" }));
+                dlHtml.href = localDownloadUrl;
+                dlHtml.download = `${slugifyFileName(currentTitle)}.html`;
+                exportPanel.style.display = "";
+            } catch (error) {
+                statusText.textContent = error.message;
+                resultFrame.innerHTML = "<p class=\"muted\">The request failed. Check the API logs and validate the payload.</p>";
+            } finally {
+                submitButton.disabled = false;
+            }
+        });
+
+        saveButton.addEventListener("click", async () => {
+            if (!generatedHtml) {
+                statusText.textContent = "Build a document first, then save it.";
+                return;
+            }
+            saveButton.disabled = true;
+            statusText.textContent = "Saving document to history...";
+
+            try {
+                const response = await fetch("/documents/save", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        title: currentTitle || String(document.getElementById("title").value || "Document"),
+                        document_type: currentDocumentType || String(document.getElementById("document_type").value || "general-work-report"),
+                        tracking_code: currentTrackingCode || trackingCodeInput.value,
+                        html: generatedHtml,
+                    }),
+                });
+                if (!response.ok) throw new Error("Save failed.");
+
+                const result = await response.json();
+                currentDocId = result.doc_id;
+                statusText.textContent = `Saved to history — ${result.tracking_code}`;
+                document.getElementById("tracking-info").textContent =
+                    `Tracking code: ${result.tracking_code} • Saved`;
+                dlHtml.href = `/documents/${currentDocId}/download?format=html`;
+                dlHtml.download = "";
+                window.location.href = "/history";
+            } catch (error) {
+                statusText.textContent = error.message;
+            } finally {
+                saveButton.disabled = false;
+            }
+        });
+
+        // ── Export actions ───────────────────────────────────────────────────
+        document.getElementById("btn-preview").addEventListener("click", () => {
+            openHtmlPreview(false);
+        });
+
+        document.getElementById("btn-print").addEventListener("click", () => {
+            openHtmlPreview(true);
+        });
+
+        document.getElementById("btn-clear").addEventListener("click", () => {
+            form.reset();
+            generatedHtml = "";
+            currentDocId = "";
+            currentTrackingCode = "";
+            currentDocumentType = "";
+            currentTitle = "";
+            saveButton.style.display = "none";
+            resultFrame.innerHTML = '<p class="muted">Generated HTML will render here after submission.</p>';
+            exportPanel.style.display = "none";
+            statusText.textContent = "Waiting for input.";
+            if (localDownloadUrl) {
+                URL.revokeObjectURL(localDownloadUrl);
+                localDownloadUrl = "";
+            }
+            documentDateInput.value = new Date().toISOString().slice(0, 10);
+            updateTrackingCode();
+            loadDocumentDefaults();
+            document.querySelectorAll(".field.ai-suggested").forEach((f) => f.classList.remove("ai-suggested"));
+        });
+
+        // ── Post-generation re-theme ────────────────────────────────────────
+        restyleButton.addEventListener("click", async () => {
+            if (!generatedHtml) {
+                statusText.textContent = "Build a document first, then re-apply a theme.";
+                return;
+            }
+
+            restyleButton.disabled = true;
+            statusText.textContent = "Applying selected theme to current result...";
+            try {
+                const response = await fetch("/documents/restyle-html", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({
+                        html: generatedHtml,
+                        theme: document.getElementById("theme").value || "smtp",
+                    }),
+                });
+                if (!response.ok) throw new Error("Re-theme operation failed.");
+
+                const result = await response.json();
+                generatedHtml = result.html;
+                resultFrame.innerHTML = result.html;
+                statusText.textContent = `Theme applied: ${result.theme}`;
+            } catch (error) {
+                statusText.textContent = error.message;
+            } finally {
+                restyleButton.disabled = false;
+            }
+        });
+
+        // ── Logout handler ────────────────────────────────────────────────────
+        heroLogout.addEventListener("click", async () => {
+            await fetch("/auth/logout", { method: "POST" });
+            window.location.href = "/";
+        });
+
+        // ── Load document defaults ────────────────────────────────────────────
+        async function loadDocumentDefaults() {
+            try {
+                const [accountDefaultsResponse, logosResponse] = await Promise.all([
+                    fetch("/account/defaults"),
+                    fetch("/logos"),
+                ]);
+
+                if (!logosResponse.ok) return;
+                const logosPayload = await logosResponse.json();
+                const logos = Array.isArray(logosPayload.logos) ? logosPayload.logos : [];
+
+                logoSelect.innerHTML = '<option value="">No logo</option>';
+                logos.forEach((item) => {
+                    const option = document.createElement("option");
+                    option.value = item.url;
+                    option.textContent = item.filename;
+                    logoSelect.appendChild(option);
+                });
+
+                if (!accountDefaultsResponse.ok) return;
+                const defaults = await accountDefaultsResponse.json();
+                if (defaults.author && !document.getElementById("author").value) {
+                    document.getElementById("author").value = defaults.author;
+                }
+                if (defaults.company_name && !document.getElementById("company_name").value) {
+                    document.getElementById("company_name").value = defaults.company_name;
+                }
+            } catch (error) {
+                // Silently ignore errors; defaults are optional
+            }
+        }
+
+        select.addEventListener("change", updateTrackingCode);
+        documentDateInput.addEventListener("change", updateTrackingCode);
+        updateTrackingCode();
+        loadDocumentDefaults();
+    </script>
+</body>
+</html>

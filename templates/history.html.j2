@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Document History - DocAgent</title>
+    <style>
+        :root {
+            --night: #0f1b2d;
+            --steel: #24415d;
+            --ember: #c85c2b;
+            --sand: #f4efe7;
+            --paper: #fcfaf5;
+            --line: #d6c8b7;
+            --text: #1a2430;
+            --muted: #5c6a78;
+            --success: #2f6f4f;
+            --danger: #8b1a1a;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top right, rgba(200, 92, 43, 0.15), transparent 28%),
+                linear-gradient(180deg, #e6ebef 0%, var(--sand) 100%);
+        }
+
+        .page-shell {
+            width: min(1240px, calc(100vw - 32px));
+            margin: 24px auto 40px;
+        }
+
+        .hero {
+            display: block;
+            padding: 28px;
+            background: linear-gradient(135deg, rgba(15, 27, 45, 0.98), rgba(36, 65, 93, 0.92));
+            color: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(15, 27, 45, 0.2);
+        }
+
+        .hero h1 {
+            margin: 0 0 8px;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: clamp(1.6rem, 3vw, 2.4rem);
+        }
+
+        .hero p { margin: 0; color: rgba(255,255,255,0.82); }
+
+        .hero-nav {
+            margin-bottom: 10px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .hero-nav a,
+        .hero-nav button {
+            border: 0;
+            border-radius: 999px;
+            padding: 8px 12px;
+            text-decoration: none;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #12314b;
+            background: rgba(255,255,255,0.88);
+            cursor: pointer;
+        }
+
+        .panel {
+            background: var(--paper);
+            border: 1px solid var(--line);
+            border-radius: 24px;
+            box-shadow: 0 18px 44px rgba(36,65,93,0.08);
+            padding: 28px;
+            margin-top: 24px;
+        }
+
+        .panel h2 {
+            margin: 0 0 6px;
+            font-family: Georgia, "Times New Roman", serif;
+            color: var(--night);
+        }
+
+        .panel-sub {
+            color: var(--muted);
+            margin: 0 0 24px;
+            font-size: 0.92rem;
+        }
+
+        #loading { color: var(--muted); font-style: italic; }
+        #empty   { color: var(--muted); display: none; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.92rem;
+        }
+
+        thead th {
+            text-align: left;
+            padding: 10px 14px;
+            background: #eae0d5;
+            color: var(--steel);
+            font-weight: 700;
+            border-bottom: 2px solid var(--line);
+        }
+
+        thead th:first-child { border-radius: 12px 0 0 0; }
+        thead th:last-child  { border-radius: 0 12px 0 0; }
+
+        tbody tr { border-bottom: 1px solid var(--line); }
+        tbody tr:last-child { border-bottom: none; }
+
+        tbody td {
+            padding: 12px 14px;
+            vertical-align: middle;
+        }
+
+        .title-cell { font-weight: 600; }
+        .code-cell   { font-family: monospace; font-size: 0.82rem; color: var(--muted); }
+        .date-cell   { white-space: nowrap; color: var(--muted); font-size: 0.85rem; }
+        .size-cell   { white-space: nowrap; color: var(--muted); font-size: 0.85rem; text-align: right; }
+
+        .actions-cell {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn {
+            display: inline-block;
+            border: 0;
+            border-radius: 999px;
+            padding: 6px 14px;
+            font: inherit;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .btn-primary  { color: white; background: linear-gradient(135deg, var(--ember), #a74419); }
+        .btn-secondary { color: var(--steel); background: linear-gradient(135deg, #e9dfd2, #d7c7b2); }
+        .btn-danger    { color: white; background: linear-gradient(135deg, #c0392b, #922b21); }
+        .btn:disabled  { opacity: 0.55; cursor: not-allowed; }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 0.74rem;
+            font-weight: 700;
+        }
+
+        .badge-html { background: #dff0d8; color: #2f6f4f; }
+        .badge-docx { background: #d6eaf8; color: #1a5276; }
+
+        @media (max-width: 760px) {
+            table, thead, tbody, tr, td, th { display: block; }
+            thead { display: none; }
+            tbody td { padding: 6px 14px; }
+            tbody td::before {
+                content: attr(data-label) ": ";
+                font-weight: 700;
+                color: var(--steel);
+            }
+            .actions-cell { padding-top: 12px; }
+        }
+    </style>
+</head>
+<body>
+<div class="page-shell">
+    <section class="hero">
+        <div class="hero-nav">
+            <a href="/app">Builder</a>
+            <a href="/account">My Account</a>
+            {% if is_admin %}
+            <a href="/settings">Settings</a>
+            {% endif %}
+            <button id="hero-logout" type="button">Logout</button>
+        </div>
+        <h1>Document History</h1>
+        <p>Your generated documents - available for 48 hours. Maximum 5 GB total storage per instance. Powered by IKAP Systems.</p>
+    </section>
+
+    <div class="panel">
+        <h2>Recent documents</h2>
+        <p class="panel-sub">Signed in as <strong>{{ username }}</strong>. Documents are purged automatically after 48 hours.</p>
+
+        <div id="loading">Loading…</div>
+        <div id="empty">No documents found yet. <a href="/app">Build your first document</a>.</div>
+
+        <table id="history-table" style="display:none;">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Type / Tracking</th>
+                    <th>Formats</th>
+                    <th>Created</th>
+                    <th style="text-align:right;">Size</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="history-body"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function fmtBytes(b) {
+        if (b < 1024) return `${b} B`;
+        if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`;
+        return `${(b / 1024 / 1024).toFixed(1)} MB`;
+    }
+
+    function fmtDate(iso) {
+        try {
+            return new Date(iso).toLocaleString(undefined, {
+                month: "short", day: "numeric", year: "numeric",
+                hour: "2-digit", minute: "2-digit",
+            });
+        } catch { return iso; }
+    }
+
+    async function loadHistory() {
+        try {
+            const res = await fetch("/documents/history");
+            if (!res.ok) throw new Error("Failed to load history.");
+            const items = await res.json();
+
+            document.getElementById("loading").style.display = "none";
+
+            if (!items.length) {
+                document.getElementById("empty").style.display = "";
+                return;
+            }
+
+            const tbody = document.getElementById("history-body");
+            items.forEach((item) => {
+                const tr = document.createElement("tr");
+                tr.dataset.docId = item.doc_id;
+
+                const badges = [
+                    item.has_html ? `<span class="badge badge-html">HTML</span>` : "",
+                    item.has_docx ? `<span class="badge badge-docx">DOCX</span>` : "",
+                ].filter(Boolean).join(" ");
+
+                const dlHtml = item.has_html
+                    ? `<a class="btn btn-secondary" href="/documents/${item.doc_id}/download?format=html" download>HTML</a>`
+                    : "";
+                const dlDocx = item.has_docx
+                    ? `<a class="btn btn-secondary" href="/documents/${item.doc_id}/download?format=docx" download>DOCX</a>`
+                    : "";
+
+                tr.innerHTML = `
+                    <td class="title-cell" data-label="Title">${escHtml(item.title)}</td>
+                    <td data-label="Type">
+                        <div style="font-weight:600">${escHtml(item.document_type)}</div>
+                        <div class="code-cell">${escHtml(item.tracking_code)}</div>
+                    </td>
+                    <td data-label="Formats">${badges || '<span class="muted">—</span>'}</td>
+                    <td class="date-cell" data-label="Created">${fmtDate(item.created_at)}</td>
+                    <td class="size-cell" data-label="Size">${fmtBytes(item.file_size_bytes)}</td>
+                    <td class="actions-cell" data-label="Actions">
+                        ${dlHtml}
+                        ${dlDocx}
+                        <button class="btn btn-secondary" onclick="openPreview('${item.doc_id}')">Preview</button>
+                        <button class="btn btn-secondary" onclick="printDoc('${item.doc_id}')">Print / PDF</button>
+                        <button class="btn btn-danger" onclick="deleteDoc('${item.doc_id}', this)">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById("history-table").style.display = "";
+        } catch (err) {
+            document.getElementById("loading").textContent = err.message;
+        }
+    }
+
+    function escHtml(s) {
+        return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    }
+
+    function openPreview(docId) {
+        window.open(`/documents/${docId}/preview`, "_blank");
+    }
+
+    function printDoc(docId) {
+        window.open(`/documents/${docId}/preview?autoprint=1`, "_blank");
+    }
+
+    async function deleteDoc(docId, btn) {
+        if (!confirm("Delete this document? This cannot be undone.")) return;
+        btn.disabled = true;
+        try {
+            const res = await fetch(`/documents/${docId}`, { method: "DELETE" });
+            if (!res.ok) throw new Error("Delete failed.");
+            const row = btn.closest("tr");
+            row.style.transition = "opacity 0.3s";
+            row.style.opacity = "0";
+            setTimeout(() => {
+                row.remove();
+                if (!document.getElementById("history-body").children.length) {
+                    document.getElementById("history-table").style.display = "none";
+                    document.getElementById("empty").style.display = "";
+                }
+            }, 300);
+        } catch (err) {
+            alert(err.message);
+            btn.disabled = false;
+        }
+    }
+
+    document.getElementById("hero-logout").addEventListener("click", async () => {
+        await fetch("/auth/logout", { method: "POST" });
+        window.location.href = "/";
+    });
+
+    loadHistory();
+</script>
+</body>
+</html>

@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>DocAgent Settings</title>
+    <style>
+        :root {
+            --night: #0f1b2d;
+            --steel: #24415d;
+            --ember: #c85c2b;
+            --sand: #f4efe7;
+            --paper: #fcfaf5;
+            --line: #d6c8b7;
+            --text: #1a2430;
+            --muted: #5d6d79;
+            --accent: #2f6f4f;
+            --warn: #af3f2b;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top right, rgba(200, 92, 43, 0.15), transparent 28%),
+                linear-gradient(180deg, #e6ebef 0%, var(--sand) 100%);
+        }
+
+        .shell {
+            width: min(1240px, calc(100vw - 32px));
+            margin: 24px auto 40px;
+            display: grid;
+            gap: 18px;
+        }
+
+        .topbar {
+            background: linear-gradient(135deg, rgba(15, 27, 45, 0.98), rgba(36, 65, 93, 0.92));
+            color: #fff;
+            padding: 28px;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(15, 27, 45, 0.2);
+
+        }
+
+        .topbar h1 {
+            margin: 0;
+            font-size: clamp(1.6rem, 2.6vw, 2.2rem);
+            font-family: Georgia, "Times New Roman", serif;
+        }
+
+        .topbar p {
+            margin: 4px 0 0;
+            color: rgba(255, 255, 255, 0.82);
+            font-size: 0.92rem;
+        }
+
+        .links {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+
+        .links a,
+        .links button {
+            border: 0;
+            border-radius: 999px;
+            padding: 8px 12px;
+            font: inherit;
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.88);
+            color: #12314b;
+        }
+
+        .panel {
+            border: 1px solid var(--line);
+            border-radius: 24px;
+            background: var(--paper);
+            padding: 18px;
+            box-shadow: 0 18px 44px rgba(36, 65, 93, 0.08);
+        }
+
+        .panel h2 {
+            margin: 0 0 12px;
+            color: var(--night);
+            font-family: Georgia, "Times New Roman", serif;
+        }
+
+        .create-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+            align-items: end;
+        }
+
+        .field { display: grid; gap: 6px; }
+
+        label {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--steel);
+        }
+
+        input,
+        select {
+            border: 1px solid #c9b9a6;
+            border-radius: 10px;
+            padding: 10px;
+            font: inherit;
+            width: 100%;
+            background: #fff;
+        }
+
+        .logo-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .logo-card {
+            border: 1px solid #e5d8c8;
+            border-radius: 12px;
+            background: #fff;
+            padding: 8px;
+            display: grid;
+            gap: 8px;
+        }
+
+        .logo-card img {
+            width: 100%;
+            height: 74px;
+            object-fit: contain;
+            border: 1px solid #efdfcd;
+            border-radius: 8px;
+            background: #fcfaf7;
+        }
+
+        .logo-card .logo-name {
+            font-size: 0.78rem;
+            color: var(--muted);
+            word-break: break-all;
+        }
+
+        .logo-meta {
+            font-size: 0.8rem;
+            color: var(--muted);
+            margin: 8px 0 0;
+        }
+
+        .checkbox {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .checkbox input { width: auto; }
+
+        .create-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        button {
+            border: 0;
+            border-radius: 999px;
+            padding: 10px 14px;
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            color: #fff;
+            background: linear-gradient(135deg, var(--accent), #125146);
+        }
+
+        .ghost {
+            background: linear-gradient(135deg, #d9ccb9, #cab79f);
+            color: #2d2d2d;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 9px;
+            border-bottom: 1px solid #e5d8c8;
+            font-size: 0.92rem;
+            vertical-align: top;
+        }
+
+        th {
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            font-size: 0.77rem;
+        }
+
+        .row-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .mini {
+            padding: 6px 10px;
+            font-size: 0.78rem;
+        }
+
+        .danger {
+            background: linear-gradient(135deg, #c35a37, #9e3f22);
+        }
+
+        .status {
+            min-height: 22px;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .error { color: var(--warn); }
+
+        @media (max-width: 920px) {
+            .create-grid { grid-template-columns: 1fr; }
+            .logo-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            table, thead, tbody, th, td, tr { display: block; }
+            thead { display: none; }
+            tr { border-bottom: 1px solid #e5d8c8; padding: 8px 0; }
+            td { border: 0; padding: 4px 0; }
+        }
+
+        @media (max-width: 980px) {
+            .shell {
+                width: min(100vw - 20px, 1240px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="shell">
+        <header class="topbar">
+            <div class="links">
+                <a href="/app">Open Builder</a>
+                <a href="/history">History</a>
+                <a href="/account">My Account</a>
+                <button id="logout" type="button">Logout</button>
+            </div>
+            <div>
+                <h1>Account Settings</h1>
+                <p>Signed in as {{ username }}. Manage users, reset passwords, and enable or disable accounts. Powered by IKAP Systems.</p>
+            </div>
+        </header>
+
+        <section class="panel">
+            <h2>Create User</h2>
+            <div class="create-grid">
+                <div class="field">
+                    <label for="new-username">Username</label>
+                    <input id="new-username">
+                </div>
+                <div class="field">
+                    <label for="new-password">Temporary Password</label>
+                    <input id="new-password" type="password">
+                </div>
+                <div class="field">
+                    <label for="new-email">Email (optional)</label>
+                    <input id="new-email" type="email" placeholder="user@example.com">
+                </div>
+                <div class="field checkbox">
+                    <input id="new-admin" type="checkbox">
+                    <label for="new-admin">Admin account</label>
+                </div>
+                <div class="field">
+                    <label for="new-limit">Daily doc limit</label>
+                    <input id="new-limit" type="number" min="1" value="25">
+                </div>
+                <div class="create-actions">
+                    <button id="create-user" type="button">Create</button>
+                    <button id="refresh" type="button" class="ghost">Refresh</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>DeepSeek API Settings</h2>
+            <div class="create-grid">
+                <div class="field">
+                    <label for="deepseek-model">Model</label>
+                    <input id="deepseek-model" value="deepseek-chat">
+                </div>
+                <div class="field">
+                    <label for="deepseek-base-url">Base URL</label>
+                    <input id="deepseek-base-url" value="https://api.deepseek.com">
+                </div>
+                <div class="field">
+                    <label for="deepseek-api-key">API Key (leave blank to keep current)</label>
+                    <input id="deepseek-api-key" type="password" placeholder="sk-...">
+                </div>
+                <div class="create-actions">
+                    <button id="save-deepseek" type="button">Save API Settings</button>
+                    <button id="test-deepseek" type="button" class="ghost">Test Connection</button>
+                </div>
+            </div>
+            <div class="status" id="deepseek-status"></div>
+        </section>
+
+        <section class="panel">
+            <h2>Email Settings</h2>
+            <div class="create-grid">
+                <div class="field">
+                    <label for="app-base-url">App Base URL</label>
+                    <input id="app-base-url" placeholder="https://docagent.example.com">
+                </div>
+                <div class="field">
+                    <label for="smtp-host">SMTP Host</label>
+                    <input id="smtp-host" placeholder="smtp.office365.com">
+                </div>
+                <div class="field">
+                    <label for="smtp-port">SMTP Port</label>
+                    <input id="smtp-port" type="number" value="587">
+                </div>
+                <div class="field">
+                    <label for="smtp-user">SMTP Username</label>
+                    <input id="smtp-user" placeholder="mailer@example.com">
+                </div>
+                <div class="field">
+                    <label for="smtp-pass">SMTP Password (leave blank to keep)</label>
+                    <input id="smtp-pass" type="password">
+                </div>
+                <div class="field checkbox">
+                    <input id="smtp-tls" type="checkbox" checked>
+                    <label for="smtp-tls">Use TLS</label>
+                </div>
+                <div class="field">
+                    <label for="smtp-from">From Email</label>
+                    <input id="smtp-from" type="email" placeholder="noreply@example.com">
+                </div>
+                <div class="create-actions">
+                    <button id="save-email" type="button">Save Email Settings</button>
+                </div>
+            </div>
+            <div class="status" id="email-status"></div>
+        </section>
+
+        <section class="panel">
+            <h2>Invite User</h2>
+            <div class="create-grid">
+                <div class="field">
+                    <label for="invite-email">Email</label>
+                    <input id="invite-email" type="email" placeholder="new.user@example.com">
+                </div>
+                <div class="field checkbox">
+                    <input id="invite-admin" type="checkbox">
+                    <label for="invite-admin">Admin account</label>
+                </div>
+                <div class="field">
+                    <label for="invite-limit">Daily doc limit</label>
+                    <input id="invite-limit" type="number" min="1" value="25">
+                </div>
+                <div class="create-actions">
+                    <button id="send-invite" type="button">Send Invitation</button>
+                </div>
+            </div>
+            <div class="status" id="invite-status"></div>
+        </section>
+
+        <section class="panel">
+            <h2>Document Branding Defaults</h2>
+            <p style="color: var(--muted); font-size: 0.9rem; margin: 0 0 12px;">Admin-only branding controls. User author/company presets are managed in My Account.</p>
+            <div class="create-grid">
+                <div class="field">
+                    <label for="default-logo">Default Company Logo</label>
+                    <select id="default-logo">
+                        <option value="">No logo</option>
+                    </select>
+                    <p class="logo-meta" id="logo-limit-meta"></p>
+                </div>
+                <div class="field">
+                    <label for="logo-upload">Upload Logo (PNG/JPG, max 1 MB)</label>
+                    <input id="logo-upload" type="file" accept=".png,.jpg,.jpeg,image/png,image/jpeg">
+                </div>
+                <div class="create-actions">
+                    <button id="upload-logo" type="button" class="ghost">Upload Logo</button>
+                    <button id="save-defaults" type="button">Save Defaults</button>
+                </div>
+            </div>
+            <div class="logo-grid" id="logo-grid"></div>
+            <div class="status" id="defaults-status"></div>
+        </section>
+
+        <section class="panel">
+            <h2>Users</h2>
+            <div class="status" id="status"></div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>MFA</th>
+                        <th>State</th>
+                        <th>Daily Limit</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="rows"></tbody>
+            </table>
+        </section>
+    </div>
+
+    <script>
+        const statusBox = document.getElementById("status");
+        const rows = document.getElementById("rows");
+        const createBtn = document.getElementById("create-user");
+        const refreshBtn = document.getElementById("refresh");
+        const logoutBtn = document.getElementById("logout");
+        const deepseekStatus = document.getElementById("deepseek-status");
+
+        const usernameInput = document.getElementById("new-username");
+        const passwordInput = document.getElementById("new-password");
+        const emailInput = document.getElementById("new-email");
+        const adminInput = document.getElementById("new-admin");
+        const limitInput = document.getElementById("new-limit");
+        const deepseekModelInput = document.getElementById("deepseek-model");
+        const deepseekBaseUrlInput = document.getElementById("deepseek-base-url");
+        const deepseekApiKeyInput = document.getElementById("deepseek-api-key");
+        const saveDeepseekBtn = document.getElementById("save-deepseek");
+        const testDeepseekBtn = document.getElementById("test-deepseek");
+        const appBaseUrlInput = document.getElementById("app-base-url");
+        const smtpHostInput = document.getElementById("smtp-host");
+        const smtpPortInput = document.getElementById("smtp-port");
+        const smtpUserInput = document.getElementById("smtp-user");
+        const smtpPassInput = document.getElementById("smtp-pass");
+        const smtpTlsInput = document.getElementById("smtp-tls");
+        const smtpFromInput = document.getElementById("smtp-from");
+        const saveEmailBtn = document.getElementById("save-email");
+        const emailStatus = document.getElementById("email-status");
+        const inviteEmailInput = document.getElementById("invite-email");
+        const inviteAdminInput = document.getElementById("invite-admin");
+        const inviteLimitInput = document.getElementById("invite-limit");
+        const sendInviteBtn = document.getElementById("send-invite");
+        const inviteStatus = document.getElementById("invite-status");
+        const defaultLogoInput = document.getElementById("default-logo");
+        const logoUploadInput = document.getElementById("logo-upload");
+        const uploadLogoBtn = document.getElementById("upload-logo");
+        const logoGrid = document.getElementById("logo-grid");
+        const logoLimitMeta = document.getElementById("logo-limit-meta");
+        const saveDefaultsBtn = document.getElementById("save-defaults");
+        const defaultsStatus = document.getElementById("defaults-status");
+        let logoOptions = [];
+        let adminDefaults = { author: "", company_name: "", company_logo_url: "" };
+
+        function status(message, isError = false) {
+            statusBox.textContent = message;
+            statusBox.classList.toggle("error", isError);
+        }
+
+        async function fetchUsers() {
+            try {
+                const response = await fetch("/admin/users");
+                if (response.status === 401) {
+                    window.location.href = "/";
+                    return;
+                }
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail || "Failed to load users.");
+                }
+                const users = await response.json();
+                rows.innerHTML = users.map((u) => `
+                    <tr data-user="${u.username}" data-disabled="${u.disabled ? "1" : "0"}">
+                        <td>${u.username}</td>
+                        <td>${u.email || "-"}</td>
+                        <td>${u.is_admin ? "admin" : "user"}</td>
+                        <td>${u.mfa_enabled ? "enabled" : "pending"}</td>
+                        <td>${u.disabled ? "disabled" : "active"}</td>
+                        <td>${u.daily_doc_limit === null ? "unlimited" : u.daily_doc_limit}</td>
+                        <td>${u.created_at}</td>
+                        <td>
+                            <div class="row-actions">
+                                <button type="button" class="mini act-disable ${u.disabled ? "ghost" : "danger"}">${u.disabled ? "Enable" : "Disable"}</button>
+                                <button type="button" class="mini act-reset">Reset Password</button>
+                                <button type="button" class="mini act-limit ghost">Set Limit</button>
+                                <button type="button" class="mini act-delete danger">Delete</button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join("");
+
+                rows.querySelectorAll(".act-disable").forEach((button) => {
+                    button.addEventListener("click", async (event) => {
+                        const row = event.target.closest("tr");
+                        const username = row?.dataset.user;
+                        const disabled = row?.dataset.disabled === "1";
+                        if (!username) return;
+                        try {
+                            const response = await fetch(`/admin/users/${encodeURIComponent(username)}/disable`, {
+                                method: "POST",
+                                headers: {"Content-Type": "application/json"},
+                                body: JSON.stringify({disabled: !disabled}),
+                            });
+                            if (!response.ok) {
+                                const err = await response.json();
+                                throw new Error(err.detail || "Update failed.");
+                            }
+                            status(`${username} is now ${disabled ? "active" : "disabled"}.`);
+                            await fetchUsers();
+                        } catch (error) {
+                            status(error.message || "Update failed.", true);
+                        }
+                    });
+                });
+
+                rows.querySelectorAll(".act-reset").forEach((button) => {
+                    button.addEventListener("click", async (event) => {
+                        const row = event.target.closest("tr");
+                        const username = row?.dataset.user;
+                        if (!username) return;
+                        const newPass = prompt(`Set new temporary password for ${username}:`);
+                        if (!newPass) return;
+                        try {
+                            const response = await fetch(`/admin/users/${encodeURIComponent(username)}/reset-password`, {
+                                method: "POST",
+                                headers: {"Content-Type": "application/json"},
+                                body: JSON.stringify({password: newPass}),
+                            });
+                            if (!response.ok) {
+                                const err = await response.json();
+                                throw new Error(err.detail || "Password reset failed.");
+                            }
+                            status(`Password reset for ${username}. MFA enrollment will be required again.`);
+                        } catch (error) {
+                            status(error.message || "Password reset failed.", true);
+                        }
+                    });
+                });
+
+                rows.querySelectorAll(".act-limit").forEach((button) => {
+                    button.addEventListener("click", async (event) => {
+                        const row = event.target.closest("tr");
+                        const username = row?.dataset.user;
+                        if (!username) return;
+                        const input = prompt(`Set daily limit for ${username} (blank for unlimited):`);
+                        if (input === null) return;
+                        const limit = input.trim() === "" ? null : Number(input.trim());
+                        if (limit !== null && (!Number.isInteger(limit) || limit < 1)) {
+                            status("Daily limit must be a whole number >= 1, or blank for unlimited.", true);
+                            return;
+                        }
+                        try {
+                            const response = await fetch(`/admin/users/${encodeURIComponent(username)}/daily-limit`, {
+                                method: "POST",
+                                headers: {"Content-Type": "application/json"},
+                                body: JSON.stringify({daily_doc_limit: limit}),
+                            });
+                            if (!response.ok) {
+                                const err = await response.json();
+                                throw new Error(err.detail || "Failed to update daily limit.");
+                            }
+                            status(`Updated daily limit for ${username}.`);
+                            await fetchUsers();
+                        } catch (error) {
+                            status(error.message || "Failed to update daily limit.", true);
+                        }
+                    });
+                });
+
+                rows.querySelectorAll(".act-delete").forEach((button) => {
+                    button.addEventListener("click", async (event) => {
+                        const row = event.target.closest("tr");
+                        const username = row?.dataset.user;
+                        if (!username) return;
+                        if (!confirm(`Are you sure you want to delete user "${username}"? This cannot be undone.`)) {
+                            return;
+                        }
+                        try {
+                            const response = await fetch(`/admin/users/${encodeURIComponent(username)}`, {
+                                method: "DELETE",
+                                headers: {"Content-Type": "application/json"},
+                            });
+                            if (!response.ok) {
+                                const err = await response.json();
+                                throw new Error(err.detail || "Failed to delete user.");
+                            }
+                            status(`User ${username} deleted.`);
+                            await fetchUsers();
+                        } catch (error) {
+                            status(error.message || "Failed to delete user.", true);
+                        }
+                    });
+                });
+            } catch (error) {
+                status(error.message || "Failed to load users.", true);
+            }
+        }
+
+        async function loadDeepSeekSettings() {
+            try {
+                const response = await fetch("/admin/settings/deepseek");
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail || "Failed to load DeepSeek settings.");
+                }
+                const config = await response.json();
+                deepseekModelInput.value = config.deepseek_model || "deepseek-chat";
+                deepseekBaseUrlInput.value = config.deepseek_base_url || "https://api.deepseek.com";
+                deepseekStatus.textContent = config.api_key_configured
+                    ? "API key is configured."
+                    : "API key is not configured.";
+                deepseekStatus.classList.remove("error");
+            } catch (error) {
+                deepseekStatus.textContent = error.message || "Failed to load DeepSeek settings.";
+                deepseekStatus.classList.add("error");
+            }
+        }
+
+        createBtn.addEventListener("click", async () => {
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value;
+            const limitRaw = limitInput.value.trim();
+            if (!username || !password) {
+                status("Username and password are required.", true);
+                return;
+            }
+            const dailyLimit = limitRaw === "" ? null : Number(limitRaw);
+            if (dailyLimit !== null && (!Number.isInteger(dailyLimit) || dailyLimit < 1)) {
+                status("Daily limit must be a whole number >= 1, or blank for unlimited.", true);
+                return;
+            }
+            try {
+                const response = await fetch("/admin/users", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({
+                        username,
+                        password,
+                        email: emailInput.value.trim(),
+                        is_admin: !!adminInput.checked,
+                        daily_doc_limit: dailyLimit,
+                    }),
+                });
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail || "Create user failed.");
+                }
+                usernameInput.value = "";
+                passwordInput.value = "";
+                emailInput.value = "";
+                adminInput.checked = false;
+                limitInput.value = "25";
+                status("User created.");
+                await fetchUsers();
+            } catch (error) {
+                status(error.message || "Create user failed.", true);
+            }
+        });
+
+        saveDeepseekBtn.addEventListener("click", async () => {
+            try {
+                const response = await fetch("/admin/settings/deepseek", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({
+                        deepseek_model: deepseekModelInput.value.trim(),
+                        deepseek_base_url: deepseekBaseUrlInput.value.trim(),
+                        deepseek_api_key: deepseekApiKeyInput.value,
+                    }),
+                });
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail || "Failed to save DeepSeek settings.");
+                }
+                deepseekApiKeyInput.value = "";
+                deepseekStatus.textContent = "DeepSeek settings saved.";
+                deepseekStatus.classList.remove("error");
+                await loadDeepSeekSettings();
+            } catch (error) {
+                deepseekStatus.textContent = error.message || "Failed to save DeepSeek settings.";
+                deepseekStatus.classList.add("error");
+            }
+        });
+
+        testDeepseekBtn.addEventListener("click", async () => {
+            try {
+                const response = await fetch("/admin/settings/deepseek/test", { method: "POST" });
+                const payload = await response.json();
+                if (!response.ok || !payload.success) {
+                    throw new Error(payload.detail || "DeepSeek test failed.");
+                }
+                deepseekStatus.textContent = `Connection OK: ${payload.detail}`;
+                deepseekStatus.classList.remove("error");
+            } catch (error) {
+                deepseekStatus.textContent = error.message || "DeepSeek test failed.";
+                deepseekStatus.classList.add("error");
+            }
+        });
+
+        async function loadEmailSettings() {
+            try {
+                const response = await fetch("/admin/settings/email");
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail || "Failed to load email settings.");
+                }
+                const cfg = await response.json();
+                appBaseUrlInput.value = cfg.app_base_url || "";
+                smtpHostInput.value = cfg.smtp_host || "";
+                smtpPortInput.value = cfg.smtp_port || 587;
+                smtpUserInput.value = cfg.smtp_username || "";
+                smtpTlsInput.checked = !!cfg.smtp_use_tls;
+                smtpFromInput.value = cfg.smtp_from_email || "";
+                emailStatus.textContent = cfg.smtp_configured ? "Email is configured." : "Email is not configured.";
+                emailStatus.classList.remove("error");
+            } catch (error) {
+                emailStatus.textContent = error.message || "Failed to load email settings.";
+                emailStatus.classList.add("error");
+            }
+        }
+
+        saveEmailBtn.addEventListener("click", async () => {
+            try {
+                const response = await fetch("/admin/settings/email", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({
+                        app_base_url: appBaseUrlInput.value.trim(),
+                        smtp_host: smtpHostInput.value.trim(),
+                        smtp_port: Number(smtpPortInput.value || 587),
+                        smtp_username: smtpUserInput.value.trim(),
+                        smtp_password: smtpPassInput.value,
+                        smtp_use_tls: !!smtpTlsInput.checked,
+                        smtp_from_email: smtpFromInput.value.trim(),
+                    }),
+                });
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail || "Failed to save email settings.");
+                }
+                smtpPassInput.value = "";
+                emailStatus.textContent = "Email settings saved.";
+                emailStatus.classList.remove("error");
+                await loadEmailSettings();
+            } catch (error) {
+                emailStatus.textContent = error.message || "Failed to save email settings.";
+                emailStatus.classList.add("error");
+            }
+        });
+
+        sendInviteBtn.addEventListener("click", async () => {
+            const email = inviteEmailInput.value.trim();
+            if (!email) {
+                inviteStatus.textContent = "Email is required.";
+                inviteStatus.classList.add("error");
+                return;
+            }
+            const rawLimit = inviteLimitInput.value.trim();
+            const limit = rawLimit === "" ? null : Number(rawLimit);
+            if (limit !== null && (!Number.isInteger(limit) || limit < 1)) {
+                inviteStatus.textContent = "Daily limit must be a whole number >= 1, or blank for unlimited.";
+                inviteStatus.classList.add("error");
+                return;
+            }
+            try {
+                const response = await fetch("/admin/users/invite", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({
+                        email,
+                        is_admin: !!inviteAdminInput.checked,
+                        daily_doc_limit: limit,
+                    }),
+                });
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail || "Failed to send invitation.");
+                }
+                inviteEmailInput.value = "";
+                inviteAdminInput.checked = false;
+                inviteLimitInput.value = "25";
+                inviteStatus.textContent = "Invitation sent.";
+                inviteStatus.classList.remove("error");
+            } catch (error) {
+                inviteStatus.textContent = error.message || "Failed to send invitation.";
+                inviteStatus.classList.add("error");
+            }
+        });
+
+        async function loadDocumentDefaults() {
+            try {
+                const response = await fetch("/admin/settings/document-defaults");
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail || "Failed to load document defaults.");
+                }
+                const config = await response.json();
+                adminDefaults = {
+                    author: config.author || "",
+                    company_name: config.company_name || "",
+                    company_logo_url: config.company_logo_url || "",
+                };
+                defaultLogoInput.value = config.company_logo_url || "";
+                defaultsStatus.textContent = "Defaults loaded.";
+                defaultsStatus.classList.remove("error");
+            } catch (error) {
+                defaultsStatus.textContent = error.message || "Failed to load document defaults.";
+                defaultsStatus.classList.add("error");
+            }
+        }
+
+        function renderLogoLibrary() {
+            const selected = defaultLogoInput.value;
+            defaultLogoInput.innerHTML = '<option value="">No logo</option>';
+            logoOptions.forEach((item) => {
+                const option = document.createElement("option");
+                option.value = item.url;
+                option.textContent = item.filename;
+                defaultLogoInput.appendChild(option);
+            });
+            if (["", ...logoOptions.map((item) => item.url)].includes(selected)) {
+                defaultLogoInput.value = selected;
+            }
+
+            logoGrid.innerHTML = logoOptions.map((item) => `
+                <div class="logo-card">
+                    <img src="${item.url}" alt="${item.filename}">
+                    <div class="logo-name">${item.filename}</div>
+                    <button type="button" class="mini danger act-delete-logo" data-fn="${item.filename}">Delete</button>
+                </div>
+            `).join("");
+
+            logoGrid.querySelectorAll(".act-delete-logo").forEach((button) => {
+                button.addEventListener("click", async (event) => {
+                    const fileName = event.target.getAttribute("data-fn");
+                    if (!fileName) return;
+                    if (!confirm(`Delete logo ${fileName}?`)) return;
+                    try {
+                        const response = await fetch(`/admin/settings/logos/${encodeURIComponent(fileName)}`, {
+                            method: "DELETE",
+                        });
+                        if (!response.ok) {
+                            const err = await response.json();
+                            throw new Error(err.detail || "Delete failed.");
+                        }
+                        const payload = await response.json();
+                        logoOptions = payload.logos || [];
+                        logoLimitMeta.textContent = `${logoOptions.length}/${payload.max_items} logos in library.`;
+                        renderLogoLibrary();
+                        defaultsStatus.textContent = "Logo deleted.";
+                        defaultsStatus.classList.remove("error");
+                    } catch (error) {
+                        defaultsStatus.textContent = error.message || "Delete failed.";
+                        defaultsStatus.classList.add("error");
+                    }
+                });
+            });
+        }
+
+        async function loadLogoLibrary() {
+            try {
+                const response = await fetch("/logos");
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail || "Failed to load logo library.");
+                }
+                const payload = await response.json();
+                logoOptions = payload.logos || [];
+                logoLimitMeta.textContent = `${logoOptions.length}/${payload.max_items} logos in library. Max file size: ${Math.floor(payload.max_file_size_bytes / 1024)} KB.`;
+                renderLogoLibrary();
+            } catch (error) {
+                defaultsStatus.textContent = error.message || "Failed to load logo library.";
+                defaultsStatus.classList.add("error");
+            }
+        }
+
+        saveDefaultsBtn.addEventListener("click", async () => {
+            try {
+                const response = await fetch("/admin/settings/document-defaults", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({
+                        author: adminDefaults.author,
+                        company_name: adminDefaults.company_name,
+                        company_logo_url: defaultLogoInput.value,
+                    }),
+                });
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail || "Failed to save document defaults.");
+                }
+                defaultsStatus.textContent = "Document defaults saved.";
+                defaultsStatus.classList.remove("error");
+                await loadDocumentDefaults();
+            } catch (error) {
+                defaultsStatus.textContent = error.message || "Failed to save document defaults.";
+                defaultsStatus.classList.add("error");
+            }
+        });
+
+        uploadLogoBtn.addEventListener("click", async () => {
+            const file = logoUploadInput.files?.[0];
+            if (!file) {
+                defaultsStatus.textContent = "Choose a PNG or JPG logo to upload.";
+                defaultsStatus.classList.add("error");
+                return;
+            }
+            try {
+                const formData = new FormData();
+                formData.append("file", file);
+                const response = await fetch("/admin/settings/logos", {
+                    method: "POST",
+                    body: formData,
+                });
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail || "Upload failed.");
+                }
+                const payload = await response.json();
+                logoOptions = payload.logos || [];
+                logoLimitMeta.textContent = `${logoOptions.length}/${payload.max_items} logos in library. Max file size: ${Math.floor(payload.max_file_size_bytes / 1024)} KB.`;
+                logoUploadInput.value = "";
+                renderLogoLibrary();
+                defaultsStatus.textContent = "Logo uploaded.";
+                defaultsStatus.classList.remove("error");
+            } catch (error) {
+                defaultsStatus.textContent = error.message || "Upload failed.";
+                defaultsStatus.classList.add("error");
+            }
+        });
+
+        refreshBtn.addEventListener("click", fetchUsers);
+
+        logoutBtn.addEventListener("click", async () => {
+            await fetch("/auth/logout", { method: "POST" });
+            window.location.href = "/";
+        });
+
+        fetchUsers();
+        loadDeepSeekSettings();
+        loadEmailSettings();
+        loadLogoLibrary();
+        loadDocumentDefaults();
+    </script>
+</body>
+</html>

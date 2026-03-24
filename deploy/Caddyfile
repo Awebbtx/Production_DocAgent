@@ -1,0 +1,20 @@
+docagent.iknowapro.net {
+    reverse_proxy 192.168.1.141:8000 {
+        header_up x-real-ip {remote_host}
+        header_up host {host}
+        header_up x-forwarded-proto {scheme}
+    }
+
+    # GZIP compression for HTML/JSON responses
+    encode gzip
+
+    import security_headers
+
+    log {
+        output file /var/log/caddy/docagent.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+        format json
+    }
+}

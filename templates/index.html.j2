@@ -337,6 +337,25 @@
         }
 
         .btn-export:disabled { opacity: 0.55; cursor: not-allowed; }
+
+        .logo-preview-wrap {
+            margin-top: 8px;
+            min-height: 52px;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo-preview {
+            display: none;
+            max-height: 48px;
+            max-width: 180px;
+            width: auto;
+            object-fit: contain;
+            border: 1px solid #d7c7b2;
+            border-radius: 8px;
+            background: #fff;
+            padding: 4px;
+        }
     </style>
 </head>
 <body>
@@ -371,6 +390,19 @@
                     </div>
 
                     <div class="field-grid">
+                        <div class="field" id="field-company">
+                            <label for="company_name">Company name</label>
+                            <input id="company_name" name="company_name" value="" placeholder="Example: R-Shack LLC">
+                        </div>
+                        <div class="field" id="field-logo">
+                            <label for="company_logo_url">Company logo</label>
+                            <select id="company_logo_url" name="company_logo_url">
+                                <option value="">No logo</option>
+                            </select>
+                            <div class="logo-preview-wrap">
+                                <img id="company_logo_preview" class="logo-preview" alt="Selected company logo preview">
+                            </div>
+                        </div>
                         <div class="field" id="field-title">
                             <label for="title">Document title</label>
                             <input id="title" name="title" value="" placeholder="Will be populated from your notes" required>
@@ -378,16 +410,6 @@
                         <div class="field" id="field-author">
                             <label for="author">Author</label>
                             <input id="author" name="author" value="" placeholder="Technician or engineer name">
-                        </div>
-                        <div class="field" id="field-company">
-                            <label for="company_name">Company name</label>
-                            <input id="company_name" name="company_name" value="" placeholder="Example: Contoso Manufacturing">
-                        </div>
-                        <div class="field" id="field-logo">
-                            <label for="company_logo_url">Company logo</label>
-                            <select id="company_logo_url" name="company_logo_url">
-                                <option value="">No logo</option>
-                            </select>
                         </div>
                         <div class="field" id="field-date">
                             <label for="document_date">Document date</label>
@@ -479,6 +501,7 @@
         const documentDateInput = document.getElementById("document_date");
         const trackingCodeInput = document.getElementById("tracking_code");
         const logoSelect = document.getElementById("company_logo_url");
+        const logoPreview = document.getElementById("company_logo_preview");
         const heroLogout = document.getElementById("hero-logout");
         let generatedHtml = "";
         let currentDocId = "";
@@ -516,6 +539,17 @@
                 .replace(/(^-|-$)/g, "")
                 .slice(0, 80);
             return slug || "document";
+        }
+
+        function refreshLogoPreview() {
+            const selectedLogo = String(logoSelect.value || "").trim();
+            if (!selectedLogo) {
+                logoPreview.style.display = "none";
+                logoPreview.removeAttribute("src");
+                return;
+            }
+            logoPreview.src = selectedLogo;
+            logoPreview.style.display = "block";
         }
 
         function openHtmlPreview(autoprint = false) {
@@ -719,6 +753,7 @@
             }
             documentDateInput.value = new Date().toISOString().slice(0, 10);
             updateTrackingCode();
+            refreshLogoPreview();
             loadDocumentDefaults();
             document.querySelectorAll(".field.ai-suggested").forEach((f) => f.classList.remove("ai-suggested"));
         });
@@ -779,6 +814,7 @@
                     option.textContent = item.filename;
                     logoSelect.appendChild(option);
                 });
+                refreshLogoPreview();
 
                 if (!accountDefaultsResponse.ok) return;
                 const defaults = await accountDefaultsResponse.json();
@@ -795,7 +831,9 @@
 
         select.addEventListener("change", updateTrackingCode);
         documentDateInput.addEventListener("change", updateTrackingCode);
+        logoSelect.addEventListener("change", refreshLogoPreview);
         updateTrackingCode();
+        refreshLogoPreview();
         loadDocumentDefaults();
     </script>
 </body>

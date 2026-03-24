@@ -85,14 +85,27 @@ The service exposes:
 - `POST /account/change-password`
 - `POST /account/reset-mfa`
 - `GET /account/usage`
+- `GET /account/defaults`
+- `POST /account/defaults`
+- `POST /auth/password-reset/request`
+- `POST /auth/password-reset/confirm`
+- `POST /auth/invitations/accept`
 - `GET /admin/users` (admin only)
 - `POST /admin/users` (admin only)
+- `POST /admin/users/invite` (admin only)
 - `POST /admin/users/{username}/daily-limit` (admin only)
 - `POST /admin/users/{username}/disable` (admin only)
 - `POST /admin/users/{username}/reset-password` (admin only)
+- `DELETE /admin/users/{username}` (admin only)
 - `GET /admin/settings/deepseek` (admin only)
 - `POST /admin/settings/deepseek` (admin only)
 - `POST /admin/settings/deepseek/test` (admin only)
+- `GET /admin/settings/email` (admin only)
+- `POST /admin/settings/email` (admin only)
+- `GET /logos`
+- `GET /logos/{file_name}`
+- `POST /admin/settings/logos` (admin only)
+- `DELETE /admin/settings/logos/{file_name}` (admin only)
 - `GET /document-types`
 - `POST /documents/recommend-template`
 - `POST /documents/build`
@@ -140,7 +153,7 @@ When MFA enrollment is required, login response now also includes an inline QR i
 ```json
 {
   "username": "tech1",
-  "password": "StrongPassword123!",
+  "password": "REPLACE_WITH_TEMP_PASSWORD",
   "is_admin": false
 }
 ```
@@ -151,9 +164,17 @@ Additional admin controls:
 
 - `POST /admin/users/{username}/daily-limit` with payload `{"daily_doc_limit": 25}` (or `null` for unlimited)
 - `POST /admin/users/{username}/disable` with payload `{"disabled": true}` (or `false` to re-enable)
-- `POST /admin/users/{username}/reset-password` with payload `{"password": "NewStrongPassword123!"}`
+- `POST /admin/users/{username}/reset-password` with payload `{"password": "REPLACE_WITH_TEMP_PASSWORD"}`
+- `DELETE /admin/users/{username}` to permanently remove a user account
 - Manage DeepSeek connection settings from the Settings UI or via:
 : `GET/POST /admin/settings/deepseek` and `POST /admin/settings/deepseek/test`
+
+Email and invite controls are available via:
+
+- `GET/POST /admin/settings/email`
+- `POST /admin/users/invite`
+- `POST /auth/password-reset/request`
+- `POST /auth/password-reset/confirm`
 
 Password reset clears stored MFA so the user must re-enroll MFA at next login.
 
@@ -167,6 +188,10 @@ Password reset clears stored MFA so the user must re-enroll MFA at next login.
 ## Production Env Template
 
 For your hosted deployment on `docagent.iknowapro.net`, use [deploy/.env.production.example](deploy/.env.production.example) as the baseline environment file.
+
+## Project Notes
+
+Detailed architecture notes, security checklist, deployment flow, and release notes are tracked in [PROJECT_NOTES.md](PROJECT_NOTES.md).
 
 ## GUI Workflow
 

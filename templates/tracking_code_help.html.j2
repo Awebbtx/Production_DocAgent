@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tracking Code Help</title>
+    <style>
+        :root {
+            --night: #0f1b2d;
+            --steel: #24415d;
+            --ember: #c85c2b;
+            --sand: #f4efe7;
+            --paper: #fcfaf5;
+            --line: #d6c8b7;
+            --text: #1a2430;
+            --muted: #5c6a78;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top right, rgba(200, 92, 43, 0.15), transparent 28%),
+                linear-gradient(180deg, #e6ebef 0%, var(--sand) 100%);
+        }
+
+        .shell {
+            width: min(1240px, calc(100vw - 32px));
+            margin: 24px auto 40px;
+        }
+
+        .hero {
+            display: block;
+            padding: 28px;
+            background: linear-gradient(135deg, rgba(15, 27, 45, 0.98), rgba(36, 65, 93, 0.92));
+            color: #fff;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(15, 27, 45, 0.2);
+        }
+
+        .hero h1 {
+            margin: 0 0 8px;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: clamp(1.8rem, 3vw, 2.8rem);
+        }
+
+        .hero p {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.84);
+            line-height: 1.55;
+        }
+
+        .hero-nav {
+            margin-bottom: 12px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .hero-nav a,
+        .hero-nav button {
+            border: 0;
+            border-radius: 999px;
+            padding: 8px 12px;
+            text-decoration: none;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #12314b;
+            background: rgba(255, 255, 255, 0.88);
+            cursor: pointer;
+        }
+
+        .panel {
+            margin-top: 22px;
+            background: var(--paper);
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            box-shadow: 0 18px 44px rgba(36, 65, 93, 0.08);
+            padding: 20px;
+        }
+
+        .panel h2 {
+            margin: 0 0 12px;
+            font-family: Georgia, "Times New Roman", serif;
+            color: var(--night);
+        }
+
+        .breakdown-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .code-box {
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: #fff;
+            padding: 14px;
+        }
+
+        .code-box .code {
+            font-family: Consolas, Monaco, monospace;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--steel);
+            letter-spacing: 0.06em;
+            margin-bottom: 6px;
+        }
+
+        .example {
+            margin-top: 12px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid #e6d8c9;
+            background: #fff;
+            font-family: Consolas, Monaco, monospace;
+            font-size: 0.95rem;
+            color: var(--steel);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+            font-size: 0.93rem;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 10px 8px;
+            border-bottom: 1px solid #e6d8c9;
+            vertical-align: top;
+        }
+
+        th {
+            color: var(--steel);
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .mono {
+            font-family: Consolas, Monaco, monospace;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 980px) {
+            .shell { width: min(100vw - 20px, 1240px); }
+            .breakdown-grid { grid-template-columns: 1fr; }
+            table { font-size: 0.86rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="shell">
+        <section class="hero">
+            <div class="hero-nav">
+                <a href="/app">Builder</a>
+                <a href="/history">History</a>
+                <a href="/account">My Account</a>
+                {% if is_admin %}
+                <a href="/settings">Settings</a>
+                {% endif %}
+                <a href="/help/tracking-codes" aria-current="page">Tracking Code Help</a>
+                <button id="hero-logout" type="button">Logout</button>
+            </div>
+            <h1>Tracking Code Logic</h1>
+            <p>Each tracking code is built as 3 + 3 + 6 characters. This page explains what each block means and maps all current type/subtype combinations.</p>
+        </section>
+
+        <section class="panel">
+            <h2>Code Breakdown</h2>
+            <div class="breakdown-grid">
+                <article class="code-box">
+                    <div class="code">First 3</div>
+                    <div><strong>Type code</strong> identifies the high-level document family.</div>
+                    <div>Example: <span class="mono">NET</span> = Network-related documents.</div>
+                </article>
+                <article class="code-box">
+                    <div class="code">Second 3</div>
+                    <div><strong>Subtype code</strong> identifies the exact template inside that family.</div>
+                    <div>Example: <span class="mono">003</span> = Network Update template.</div>
+                </article>
+                <article class="code-box">
+                    <div class="code">Last 6</div>
+                    <div><strong>Date code</strong> uses document date in <span class="mono">YYMMDD</span> format.</div>
+                    <div>Example: <span class="mono">260324</span> = 2026-03-24.</div>
+                </article>
+            </div>
+            <div class="example">Example full code: <span class="mono">NET-003-260324</span></div>
+        </section>
+
+        <section class="panel">
+            <h2>Tracking Code Grid</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Document Name</th>
+                        <th>Key</th>
+                        <th>Category</th>
+                        <th>First 3 (Type)</th>
+                        <th>Second 3 (Subtype)</th>
+                        <th>Pattern</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in document_types %}
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        <td class="mono">{{ item.key }}</td>
+                        <td>{{ item.category }}</td>
+                        <td class="mono">{{ item.type_code }}</td>
+                        <td class="mono">{{ item.subtype_code }}</td>
+                        <td class="mono">{{ item.type_code }}-{{ item.subtype_code }}-YYMMDD</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+    </div>
+
+    <script>
+        document.getElementById("hero-logout")?.addEventListener("click", async () => {
+            await fetch("/auth/logout", { method: "POST" });
+            window.location.href = "/";
+        });
+    </script>
+</body>
+</html>

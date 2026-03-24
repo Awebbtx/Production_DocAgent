@@ -225,6 +225,23 @@ async def account_page(request: Request) -> HTMLResponse:
     )
 
 
+@app.get("/help/tracking-codes", response_class=HTMLResponse)
+async def tracking_code_help_page(request: Request) -> HTMLResponse:
+    identity = _session_identity_or_none(request)
+    if not identity or not identity.mfa_verified:
+        return RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
+    return templates.TemplateResponse(
+        request,
+        "tracking_code_help.html.j2",
+        {
+            "request": request,
+            "username": identity.username,
+            "is_admin": identity.is_admin,
+            "document_types": list_document_types(),
+        },
+    )
+
+
 @app.get("/health")
 async def health() -> dict[str, str]:
     return {"status": "ok"}

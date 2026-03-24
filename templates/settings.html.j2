@@ -408,6 +408,8 @@
                         <th>MFA</th>
                         <th>State</th>
                         <th>Daily Limit</th>
+                            <th>Retention (days)</th>
+                            <th>Storage</th>
                         <th>Created</th>
                         <th>Actions</th>
                     </tr>
@@ -430,6 +432,8 @@
         const emailInput = document.getElementById("new-email");
         const adminInput = document.getElementById("new-admin");
         const limitInput = document.getElementById("new-limit");
+            const retentionInput = document.getElementById("new-retention");
+            const unlimitedStorageInput = document.getElementById("new-unlimited-storage");
         const deepseekModelInput = document.getElementById("deepseek-model");
         const deepseekBaseUrlInput = document.getElementById("deepseek-base-url");
         const deepseekApiKeyInput = document.getElementById("deepseek-api-key");
@@ -477,19 +481,22 @@
                 }
                 const users = await response.json();
                 rows.innerHTML = users.map((u) => `
-                    <tr data-user="${u.username}" data-disabled="${u.disabled ? "1" : "0"}">
+                    <tr data-user="${u.username}" data-disabled="${u.disabled ? "1" : "0"}" data-retention="${u.retention_days || 2}" data-unlimited-storage="${u.unlimited_storage ? "1" : "0"}">
                         <td>${u.username}</td>
                         <td>${u.email || "-"}</td>
                         <td>${u.is_admin ? "admin" : "user"}</td>
                         <td>${u.mfa_enabled ? "enabled" : "pending"}</td>
                         <td>${u.disabled ? "disabled" : "active"}</td>
                         <td>${u.daily_doc_limit === null ? "unlimited" : u.daily_doc_limit}</td>
+                            <td>${u.retention_days || 2}</td>
+                            <td>${u.unlimited_storage ? "unlimited" : "5 GB cap"}</td>
                         <td>${u.created_at}</td>
                         <td>
                             <div class="row-actions">
                                 <button type="button" class="mini act-disable ${u.disabled ? "ghost" : "danger"}">${u.disabled ? "Enable" : "Disable"}</button>
                                 <button type="button" class="mini act-reset">Reset Password</button>
                                 <button type="button" class="mini act-limit ghost">Set Limit</button>
+                                    <button type="button" class="mini act-purge ghost">Set Purge</button>
                                 <button type="button" class="mini act-delete danger">Delete</button>
                             </div>
                         </td>
@@ -598,6 +605,44 @@
                         }
                     });
                 });
+
+                    rows.querySelectorAll(".act-purge").forEach((button) => {
+                        button.addEventListener("click", async (event) => {
+                            const row = event.target.closest("tr");
+                            const username = row?.dataset.user;
+                            if (!username) return;
+                            const currentRetention = row?.dataset.retention || "2";
+                            const currentUnlimited = row?.dataset.unlimitedStorage === "1";
+                            const daysInput = prompt(`Set retention days for ${username} (minimum 1):`, currentRetention);
+                            if (daysInput === null) return;
+                            const retentionDays = Number(daysInput.trim());
+                            if (!Number.isInteger(retentionDays) || retentionDays < 1) {
+                                status("Retention days must be a whole number >= 1.", true);
+                                return;
+                            }
+                            const unlimitedStorage = confirm(
+                                `Enable unlimited storage for ${username}?\n\nCurrent: ${currentUnlimited ? "Unlimited" : "5 GB cap"}\n\nOK = Unlimited storage\nCancel = Enforce default 5 GB cap`
+                            );
+                            try {
+                                const response = await fetch(`/admin/users/${encodeURIComponent(username)}/purge-policy`, {
+                                    method: "POST",
+                                    headers: {"Content-Type": "application/json"},
+                                    body: JSON.stringify({
+                                        retention_days: retentionDays,
+                                        unlimited_storage: unlimitedStorage,
+                                    }),
+                                });
+                                if (!response.ok) {
+                                    const err = await response.json();
+                                    throw new Error(err.detail || "Failed to update purge policy.");
+                                }
+                                status(`Updated purge policy for ${username}.`);
+                                await fetchUsers();
+                            } catch (error) {
+                                status(error.message || "Failed to update purge policy.", true);
+                            }
+                        });
+                    });
             } catch (error) {
                 status(error.message || "Failed to load users.", true);
             }
@@ -636,6 +681,11 @@
                 status("Daily limit must be a whole number >= 1, or blank for unlimited.", true);
                 return;
             }
+                const retentionDays = Number(retentionInput.value || "2");
+                if (!Number.isInteger(retentionDays) || retentionDays < 1) {
+                    status("Retention days must be a whole number >= 1.", true);
+                    return;
+                }
             try {
                 const response = await fetch("/admin/users", {
                     method: "POST",
@@ -646,6 +696,8 @@
                         email: emailInput.value.trim(),
                         is_admin: !!adminInput.checked,
                         daily_doc_limit: dailyLimit,
+                            retention_days: retentionDays,
+                            unlimited_storage: !!unlimitedStorageInput.checked,
                     }),
                 });
                 if (!response.ok) {
@@ -657,6 +709,8 @@
                 emailInput.value = "";
                 adminInput.checked = false;
                 limitInput.value = "25";
+                    retentionInput.value = "2";
+                    unlimitedStorageInput.checked = false;
                 status("User created.");
                 await fetchUsers();
             } catch (error) {

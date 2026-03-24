@@ -39,6 +39,7 @@ from it_doc_builder.models import (
     SaveDocumentResponse,
     SetUserDailyLimitRequest,
     SetUserDisabledRequest,
+    SetUserPurgePolicyRequest,
     UpdateDeepSeekSettingsRequest,
     UpdateEmailSettingsRequest,
     UpdateDocumentDefaultsRequest,
@@ -492,6 +493,8 @@ async def create_user(request: CreateUserRequest, _: SessionIdentity = Depends(r
             email=request.email,
             is_admin=request.is_admin,
             daily_doc_limit=request.daily_doc_limit,
+            retention_days=request.retention_days,
+            unlimited_storage=request.unlimited_storage,
         )
         return JSONResponse(content=user.model_dump())
     except AuthError as exc:
@@ -523,6 +526,23 @@ async def set_user_daily_limit(
 ) -> JSONResponse:
     try:
         user = _auth_service().set_user_daily_limit(username, request.daily_doc_limit)
+        return JSONResponse(content=user.model_dump())
+    except AuthError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+
+
+@app.post("/admin/users/{username}/purge-policy", response_model=UserAccount)
+async def set_user_purge_policy(
+    username: str,
+    request: SetUserPurgePolicyRequest,
+    _: SessionIdentity = Depends(require_admin_session),
+) -> JSONResponse:
+    try:
+        user = _auth_service().set_user_purge_policy(
+            username,
+            request.retention_days,
+            request.unlimited_storage,
+        )
         return JSONResponse(content=user.model_dump())
     except AuthError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc

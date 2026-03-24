@@ -63,6 +63,8 @@ class AuthService:
                     mfa_secret TEXT,
                     disabled INTEGER NOT NULL DEFAULT 0,
                     daily_doc_limit INTEGER,
+                    retention_days INTEGER NOT NULL DEFAULT 2,
+                    unlimited_storage INTEGER NOT NULL DEFAULT 0,
                     default_author TEXT NOT NULL DEFAULT '',
                     default_company_name TEXT NOT NULL DEFAULT '',
                     created_at TEXT NOT NULL,
@@ -78,6 +80,10 @@ class AuthService:
                 connection.execute("ALTER TABLE users ADD COLUMN email TEXT NOT NULL DEFAULT ''")
             if "daily_doc_limit" not in columns:
                 connection.execute("ALTER TABLE users ADD COLUMN daily_doc_limit INTEGER")
+            if "retention_days" not in columns:
+                connection.execute("ALTER TABLE users ADD COLUMN retention_days INTEGER NOT NULL DEFAULT 2")
+            if "unlimited_storage" not in columns:
+                connection.execute("ALTER TABLE users ADD COLUMN unlimited_storage INTEGER NOT NULL DEFAULT 0")
             if "default_author" not in columns:
                 connection.execute("ALTER TABLE users ADD COLUMN default_author TEXT NOT NULL DEFAULT ''")
             if "default_company_name" not in columns:
@@ -135,6 +141,8 @@ class AuthService:
         email: str = "",
         is_admin: bool = False,
         daily_doc_limit: int | None = 25,
+        retention_days: int = 2,
+        unlimited_storage: bool = False,
     ) -> UserAccount:
         clean_username = username.strip().lower()
         clean_email = email.strip().lower()
@@ -144,6 +152,8 @@ class AuthService:
             raise AuthError("Password must be at least 10 characters.")
         if daily_doc_limit is not None and daily_doc_limit < 1:
             raise AuthError("Daily document limit must be at least 1 when configured.")
+        if retention_days < 1:
+            raise AuthError("Retention days must be at least 1.")
 
         now = datetime.now(timezone.utc).isoformat()
         password_hash = pwd_context.hash(password)
@@ -152,10 +162,23 @@ class AuthService:
             with self._connect() as connection:
                 connection.execute(
                     """
-                    INSERT INTO users (username, email, password_hash, is_admin, mfa_secret, disabled, daily_doc_limit, created_at, updated_at)
-                    VALUES (?, ?, ?, ?, NULL, 0, ?, ?, ?)
+                    INSERT INTO users (
+                        username, email, password_hash, is_admin, mfa_secret, disabled,
+                        daily_doc_limit, retention_days, unlimited_storage, created_at, updated_at
+                    )
+                    VALUES (?, ?, ?, ?, NULL, 0, ?, ?, ?, ?, ?)
                     """,
-                    (clean_username, clean_email, password_hash, int(is_admin), daily_doc_limit, now, now),
+                    (
+                        clean_username,
+                        clean_email,
+                        password_hash,
+                        int(is_admin),
+                        daily_doc_limit,
+                        retention_days,
+                        int(unlimited_storage),
+                        now,
+                        now,
+                    ),
                 )
                 connection.commit()
         except sqlite3.IntegrityError as exc:
@@ -167,7 +190,8 @@ class AuthService:
         with self._connect() as connection:
             row = connection.execute(
                 """
-                SELECT username, email, is_admin, mfa_secret, disabled, daily_doc_limit, created_at
+                  SELECT username, email, is_admin, mfa_secret, disabled, daily_doc_limit,
+                      retention_days, unlimited_storage, created_at
                 FROM users
                 WHERE username = ?
                 """,
@@ -184,6 +208,8 @@ class AuthService:
             mfa_enabled=bool(row["mfa_secret"]),
             disabled=bool(row["disabled"]),
             daily_doc_limit=row["daily_doc_limit"],
+            retention_days=int(row["retention_days"] or 2),
+            unlimited_storage=bool(row["unlimited_storage"]),
             created_at=row["created_at"],
         )
 
@@ -191,7 +217,8 @@ class AuthService:
         with self._connect() as connection:
             rows = connection.execute(
                 """
-                SELECT username, email, is_admin, mfa_secret, disabled, daily_doc_limit, created_at
+                  SELECT username, email, is_admin, mfa_secret, disabled, daily_doc_limit,
+                      retention_days, unlimited_storage, created_at
                 FROM users
                 ORDER BY username ASC
                 """
@@ -205,10 +232,38 @@ class AuthService:
                 mfa_enabled=bool(row["mfa_secret"]),
                 disabled=bool(row["disabled"]),
                 daily_doc_limit=row["daily_doc_limit"],
+                retention_days=int(row["retention_days"] or 2),
+                unlimited_storage=bool(row["unlimited_storage"]),
                 created_at=row["created_at"],
             )
             for row in rows
         ]
+
+    def set_user_purge_policy(self, username: str, retention_days: int, unlimited_storage: bool) -> UserAccount:
+        clean_username = username.strip().lower()
+        if retention_days < 1:
+            raise AuthError("Retention days must be at least 1.")
+
+        with self._connect() as connection:
+            row = connection.execute(
+                "SELECT username FROM users WHERE username = ?",
+                (clean_username,),
+            ).fetchone()
+            if not row:
+                raise AuthError("User not found.")
+
+            now = datetime.now(timezone.utc).isoformat()
+            connection.execute(
+                """
+                UPDATE users
+                SET retention_days = ?, unlimited_storage = ?, updated_at = ?
+                WHERE username = ?
+                """,
+                (retention_days, int(unlimited_storage), now, clean_username),
+            )
+            connection.commit()
+
+        return self.get_user(clean_username)
 
     def set_user_daily_limit(self, username: str, daily_doc_limit: int | None) -> UserAccount:
         clean_username = username.strip().lower()

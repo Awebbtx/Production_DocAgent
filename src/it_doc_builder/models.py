@@ -187,6 +187,8 @@ class CreateUserRequest(BaseModel):
     email: str = ""
     is_admin: bool = False
     daily_doc_limit: int | None = 25
+    retention_days: int = 2
+    unlimited_storage: bool = False
 
 
 class UserAccount(BaseModel):
@@ -196,6 +198,8 @@ class UserAccount(BaseModel):
     mfa_enabled: bool
     disabled: bool
     daily_doc_limit: int | None = None
+    retention_days: int = 2
+    unlimited_storage: bool = False
     created_at: str
 
 
@@ -209,6 +213,11 @@ class ResetUserPasswordRequest(BaseModel):
 
 class SetUserDailyLimitRequest(BaseModel):
     daily_doc_limit: int | None = None
+
+
+class SetUserPurgePolicyRequest(BaseModel):
+    retention_days: int = 2
+    unlimited_storage: bool = False
 
 
 class AccountUsageResponse(BaseModel):

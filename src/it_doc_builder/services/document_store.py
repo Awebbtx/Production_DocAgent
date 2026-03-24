@@ -6,8 +6,8 @@ from pathlib import Path
 
 from it_doc_builder.config import Settings
 
-MAX_AGE_HOURS = 48
-MAX_TOTAL_BYTES = 5 * 1024 ** 3  # 5 GB
+DEFAULT_RETENTION_DAYS = 2  # 48 hours
+DEFAULT_MAX_TOTAL_BYTES = 5 * 1024 ** 3  # 5 GB
 
 
 class DocumentStore:
@@ -138,12 +138,33 @@ class DocumentStore:
             conn.commit()
 
     def purge_expired(self) -> None:
-        """Delete records older than MAX_AGE_HOURS and trim to MAX_TOTAL_BYTES."""
-        cutoff = (datetime.now(timezone.utc) - timedelta(hours=MAX_AGE_HOURS)).isoformat()
+        """Delete records by per-user retention policy and enforce per-user storage limits."""
+        now = datetime.now(timezone.utc)
+        user_policies: dict[str, tuple[int, bool]] = {}
         with self._connect() as conn:
-            old_rows = conn.execute(
-                "SELECT * FROM documents WHERE created_at < ?", (cutoff,)
+            user_rows = conn.execute(
+                "SELECT username, retention_days, unlimited_storage FROM users"
             ).fetchall()
+            for row in user_rows:
+                user_policies[str(row["username"])] = (
+                    int(row["retention_days"] or DEFAULT_RETENTION_DAYS),
+                    bool(row["unlimited_storage"]),
+                )
+
+        with self._connect() as conn:
+            all_rows = conn.execute("SELECT * FROM documents").fetchall()
+
+        old_rows = []
+        for row in all_rows:
+            retention_days, _ = user_policies.get(
+                str(row["username"]),
+                (DEFAULT_RETENTION_DAYS, False),
+            )
+            cutoff = now - timedelta(days=max(1, retention_days))
+            created_at = datetime.fromisoformat(str(row["created_at"]))
+            if created_at < cutoff:
+                old_rows.append(row)
+
         for row in old_rows:
             self._delete_files(dict(row))
         if old_rows:
@@ -154,22 +175,33 @@ class DocumentStore:
                 )
                 conn.commit()
 
-        # Trim oldest-first if storage limit exceeded
+        # Trim oldest-first per user if storage limit exceeded and user is not unlimited.
         with self._connect() as conn:
-            all_rows = conn.execute(
+            remaining_rows = conn.execute(
                 "SELECT * FROM documents ORDER BY created_at DESC"
             ).fetchall()
-        total = sum(r["file_size_bytes"] for r in all_rows)
-        if total <= MAX_TOTAL_BYTES:
-            return
-        for row in reversed(all_rows):
-            if total <= MAX_TOTAL_BYTES:
-                break
-            self._delete_files(dict(row))
-            with self._connect() as conn:
-                conn.execute("DELETE FROM documents WHERE doc_id = ?", (row["doc_id"],))
-                conn.commit()
-            total -= row["file_size_bytes"]
+
+        rows_by_user: dict[str, list[sqlite3.Row]] = {}
+        for row in remaining_rows:
+            rows_by_user.setdefault(str(row["username"]), []).append(row)
+
+        for username, user_rows in rows_by_user.items():
+            _, unlimited_storage = user_policies.get(username, (DEFAULT_RETENTION_DAYS, False))
+            if unlimited_storage:
+                continue
+
+            total = sum(r["file_size_bytes"] for r in user_rows)
+            if total <= DEFAULT_MAX_TOTAL_BYTES:
+                continue
+
+            for row in reversed(user_rows):
+                if total <= DEFAULT_MAX_TOTAL_BYTES:
+                    break
+                self._delete_files(dict(row))
+                with self._connect() as conn:
+                    conn.execute("DELETE FROM documents WHERE doc_id = ?", (row["doc_id"],))
+                    conn.commit()
+                total -= row["file_size_bytes"]
 
     @staticmethod
     def _delete_files(record: dict) -> None:
